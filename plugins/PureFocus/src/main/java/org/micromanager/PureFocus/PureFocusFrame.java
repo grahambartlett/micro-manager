@@ -75,6 +75,7 @@ public class PureFocusFrame extends JFrame
     
     // Child dialogs
     PureFocusObjectiveSlotTableDialog objectiveSlotTableDialog_;
+    PureFocusGlobalTableDialog globalTableDialog_;
 
 	/** Creates new form PureFocusFrame
 	@param gui MM scriptInterface
@@ -96,6 +97,9 @@ public class PureFocusFrame extends JFrame
 
         objectiveSlotTableDialog_ = new PureFocusObjectiveSlotTableDialog(this, plugin_, gui_);
         objectiveSlotTableDialog_.setVisible(true);
+        
+        globalTableDialog_ = new PureFocusGlobalTableDialog(this, plugin_, gui_);
+        globalTableDialog_.setVisible(true);        
 	}
 
 

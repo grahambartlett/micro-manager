@@ -90,7 +90,7 @@ public class PureFocus implements MenuPlugin, SciJavaPlugin
     public static final String DIGIPOT_CONTROLS_OFFSET = "Global-DigipotControlsOffset";
     public static final String IS_SERVO_DIRECTION_POSITIVE = "Global-IsServoDirectionPositive";   
     public static final String IS_FOCUS_DRIVE_DIRECTION_POSITIVE = "Global-IsFocusDriveDirectionPositive";
-    public static final String EXPOSURE_TIME_MS = "Global-ExposureTimeMs";
+    public static final String EXPOSURE_TIME_US = "Global-ExposureTimeUs";
     public static final String DIGIPOT_OFFSET_SPEED_PERCENT = "Global-DigipotOffsetSpeedPercent";
     public static final String FOCUS_DRIVE_RANGE_MICRONS = "Global-FocusDriveRangeMicrons";
     public static final String IN_FOCUS_RECOVERY_TIME_MS = "Global-InFocusRecoveryTimeMs";
