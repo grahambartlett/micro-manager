@@ -36,7 +36,8 @@ nobase_mmplugin_DATA = \
 	SplitView.jar \
 	WhiteBalance.jar \
 	ZProjector.jar \
-	pgFocus.jar
+	pgFocus.jar \
+	PureFocus.jar
 
 .PHONY: plugins.stamp
 
