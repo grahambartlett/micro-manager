@@ -99,34 +99,6 @@ public class PureFocusGlobalTableDialog extends JDialog implements ActionListene
 	}
     
 
-	private void updateValues(boolean allValues)
-	{
-        String pf = parent_.getPureFocus();
-        CMMCore core = gui_.getCMMCore();
-
-        try
-		{
-            isPiezoMotor_.setSelected(Long.valueOf(core.getProperty(pf, plugin_.IS_PIEZO_MOTOR)) != 0);
-            servoOn_.setSelected(Long.valueOf(core.getProperty(pf, plugin_.SERVO_ON)) != 0);
-            servoInhibit_.setSelected(Long.valueOf(core.getProperty(pf, plugin_.SERVO_INHIBIT)) != 0);
-            focusInterruptOn_.setSelected(Long.valueOf(core.getProperty(pf, plugin_.FOCUS_INTERRUPT_ON)) != 0);
-            interfaceInhibit_.setSelected(Long.valueOf(core.getProperty(pf, plugin_.INTERFACE_INHIBIT)) != 0);
-            interfaceInhibitCount_.setText(core.getProperty(pf, plugin_.INTERFACE_INHIBIT_COUNT));
-            digipotControlsOffset_.setSelected(Long.valueOf(core.getProperty(pf, plugin_.DIGIPOT_CONTROLS_OFFSET)) != 0);
-            isServoDirectionPositive_.setSelected(Long.valueOf(core.getProperty(pf, plugin_.IS_SERVO_DIRECTION_POSITIVE)) != 0);
-            isFocusDriveDirectionPositive_.setSelected(Long.valueOf(core.getProperty(pf, plugin_.IS_FOCUS_DRIVE_DIRECTION_POSITIVE)) != 0);
-            exposureTimeUs_.setText(core.getProperty(pf, plugin_.EXPOSURE_TIME_US));
-            digipotOffsetSpeedPercent_.setText(core.getProperty(pf, plugin_.DIGIPOT_OFFSET_SPEED_PERCENT));
-            focusDriveRangeMicrons_.setText(core.getProperty(pf, plugin_.FOCUS_DRIVE_RANGE_MICRONS));
-            inFocusRecoveryTimeMs_.setText(core.getProperty(pf, plugin_.IN_FOCUS_RECOVERY_TIME_MS));
-		}
-		catch (Exception ex)
-		{
-			gui_.logs().showError("Error reading values from Prior PureFocus PF-850");
-		}
-	}    
-
-
 	/** This method is called from within the constructor to initialize the form.
 	*/
 	@SuppressWarnings("unchecked")
@@ -137,48 +109,61 @@ public class PureFocusGlobalTableDialog extends JDialog implements ActionListene
         this.setLayout(new MigLayout("", "", ""));
         
         isPiezoMotor_ = new javax.swing.JCheckBox();
-        isPiezoMotor_.addActionListener(this);   
+        isPiezoMotor_.addActionListener(this);
+        isPiezoMotor_.setActionCommand(plugin_.IS_PIEZO_MOTOR);
         
         servoOn_ = new javax.swing.JCheckBox();
         servoOn_.addActionListener(this);   
+        servoOn_.setActionCommand(plugin_.SERVO_ON);
 
         servoInhibit_ = new javax.swing.JCheckBox();
-        servoInhibit_.addActionListener(this);   
+        servoInhibit_.addActionListener(this); 
+        servoInhibit_.setActionCommand(plugin_.SERVO_INHIBIT);
 
         focusInterruptOn_ = new javax.swing.JCheckBox();
         focusInterruptOn_.addActionListener(this);   
+        focusInterruptOn_.setActionCommand(plugin_.FOCUS_INTERRUPT_ON);
 
         interfaceInhibit_ = new javax.swing.JCheckBox();
         interfaceInhibit_.addActionListener(this);   
+        interfaceInhibit_.setActionCommand(plugin_.INTERFACE_INHIBIT);
         
         interfaceInhibitCount_ = new javax.swing.JTextField();
         interfaceInhibitCount_.setPreferredSize(new java.awt.Dimension(100, 20));
-        interfaceInhibitCount_.addActionListener(this);    
+        interfaceInhibitCount_.addActionListener(this);   
+        interfaceInhibitCount_.setActionCommand(plugin_.INTERFACE_INHIBIT_COUNT);
 
         digipotControlsOffset_ = new javax.swing.JCheckBox();
-        digipotControlsOffset_.addActionListener(this);   
+        digipotControlsOffset_.addActionListener(this); 
+        digipotControlsOffset_.setActionCommand(plugin_.DIGIPOT_CONTROLS_OFFSET);
 
         isServoDirectionPositive_ = new javax.swing.JCheckBox();
-        isServoDirectionPositive_.addActionListener(this);   
+        isServoDirectionPositive_.addActionListener(this);  
+        isServoDirectionPositive_.setActionCommand(plugin_.IS_SERVO_DIRECTION_POSITIVE);
 
         isFocusDriveDirectionPositive_ = new javax.swing.JCheckBox();
-        isFocusDriveDirectionPositive_.addActionListener(this);          
+        isFocusDriveDirectionPositive_.addActionListener(this);
+        isFocusDriveDirectionPositive_.setActionCommand(plugin_.IS_FOCUS_DRIVE_DIRECTION_POSITIVE);
         
         exposureTimeUs_ = new javax.swing.JTextField();
         exposureTimeUs_.setPreferredSize(new java.awt.Dimension(100, 20));
         exposureTimeUs_.addActionListener(this); 
+        exposureTimeUs_.setActionCommand(plugin_.EXPOSURE_TIME_US);
         
         digipotOffsetSpeedPercent_ = new javax.swing.JTextField();
         digipotOffsetSpeedPercent_.setPreferredSize(new java.awt.Dimension(100, 20));
         digipotOffsetSpeedPercent_.addActionListener(this); 
+        digipotOffsetSpeedPercent_.setActionCommand(plugin_.DIGIPOT_OFFSET_SPEED_PERCENT);
         
         focusDriveRangeMicrons_ = new javax.swing.JTextField();
         focusDriveRangeMicrons_.setPreferredSize(new java.awt.Dimension(100, 20));
         focusDriveRangeMicrons_.addActionListener(this);
+        focusDriveRangeMicrons_.setActionCommand(plugin_.FOCUS_DRIVE_RANGE_MICRONS);
         
         inFocusRecoveryTimeMs_ = new javax.swing.JTextField();
         inFocusRecoveryTimeMs_.setPreferredSize(new java.awt.Dimension(100, 20));
         inFocusRecoveryTimeMs_.addActionListener(this); 
+        inFocusRecoveryTimeMs_.setActionCommand(plugin_.IN_FOCUS_RECOVERY_TIME_MS);
         
         // Add to layout
         this.add(new JLabel("Is piezo motor"), "align label");
@@ -222,6 +207,74 @@ public class PureFocusGlobalTableDialog extends JDialog implements ActionListene
 
         pack();
 	}
+    
+    
+    private void updateValues(boolean allValues)
+	{
+        String pf = parent_.getPureFocus();
+        CMMCore core = gui_.getCMMCore();
+
+        try
+		{
+            String value;
+            
+            value = core.getProperty(pf, plugin_.IS_PIEZO_MOTOR);
+            core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, plugin_.IS_PIEZO_MOTOR, value);
+            isPiezoMotor_.setSelected(Long.valueOf(value) != 0);
+            
+            value = core.getProperty(pf, plugin_.SERVO_ON);
+            core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, plugin_.SERVO_ON, value);
+            servoOn_.setSelected(Long.valueOf(value) != 0);
+            
+            value = core.getProperty(pf, plugin_.SERVO_INHIBIT);
+            core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, plugin_.SERVO_INHIBIT, value);
+            servoInhibit_.setSelected(Long.valueOf(value) != 0);
+            
+            value = core.getProperty(pf, plugin_.FOCUS_INTERRUPT_ON);
+            core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, plugin_.FOCUS_INTERRUPT_ON, value);
+            focusInterruptOn_.setSelected(Long.valueOf(value) != 0);
+            
+            value = core.getProperty(pf, plugin_.INTERFACE_INHIBIT);
+            core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, plugin_.INTERFACE_INHIBIT, value);
+            interfaceInhibit_.setSelected(Long.valueOf(value) != 0);
+            
+            value = core.getProperty(pf, plugin_.INTERFACE_INHIBIT_COUNT);
+            core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, plugin_.INTERFACE_INHIBIT_COUNT, value);
+            interfaceInhibitCount_.setText(value);
+            
+            value = core.getProperty(pf, plugin_.DIGIPOT_CONTROLS_OFFSET);
+            core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, plugin_.DIGIPOT_CONTROLS_OFFSET, value);
+            digipotControlsOffset_.setSelected(Long.valueOf(value) != 0);
+            
+            value = core.getProperty(pf, plugin_.IS_SERVO_DIRECTION_POSITIVE);
+            core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, plugin_.IS_SERVO_DIRECTION_POSITIVE, value);
+            isServoDirectionPositive_.setSelected(Long.valueOf(value) != 0);
+            
+            value = core.getProperty(pf, plugin_.IS_FOCUS_DRIVE_DIRECTION_POSITIVE);
+            core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, plugin_.IS_FOCUS_DRIVE_DIRECTION_POSITIVE, value);
+            isFocusDriveDirectionPositive_.setSelected(Long.valueOf(value) != 0);
+            
+            value = core.getProperty(pf, plugin_.EXPOSURE_TIME_US);
+            core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, plugin_.EXPOSURE_TIME_US, value);
+            exposureTimeUs_.setText(value);
+            
+            value = core.getProperty(pf, plugin_.DIGIPOT_OFFSET_SPEED_PERCENT);
+            core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, plugin_.DIGIPOT_OFFSET_SPEED_PERCENT, value);
+            digipotOffsetSpeedPercent_.setText(value);
+            
+            value = core.getProperty(pf, plugin_.FOCUS_DRIVE_RANGE_MICRONS);
+            core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, plugin_.FOCUS_DRIVE_RANGE_MICRONS, value);
+            focusDriveRangeMicrons_.setText(value);
+            
+            value = core.getProperty(pf, plugin_.IN_FOCUS_RECOVERY_TIME_MS);
+            core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, plugin_.IN_FOCUS_RECOVERY_TIME_MS, value);
+            inFocusRecoveryTimeMs_.setText(value);
+		}
+		catch (Exception ex)
+		{
+			gui_.logs().showError(ex.getMessage());
+		}
+	}
 
 				
     @Override
@@ -230,161 +283,30 @@ public class PureFocusGlobalTableDialog extends JDialog implements ActionListene
         String pf = parent_.getPureFocus();
         CMMCore core = gui_.getCMMCore();            
         Object source = e.getSource();
+        String propertyName = e.getActionCommand();
         
 		try
 		{
-            int slot = 0;
             core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
             
             if (source.getClass() == JTextField.class)
             {
                 JTextField widget = (JTextField)source;
-
-                if (source == interfaceInhibitCount_)
-                {
-                    String val = widget.getText();
-                    core.setProperty(pf, plugin_.INTERFACE_INHIBIT_COUNT, val);
-                }
-
-                if (source == exposureTimeUs_)
-                {
-                    String val = widget.getText();
-                    core.setProperty(pf, plugin_.EXPOSURE_TIME_US, val);
-                }
-
-                if (source == digipotOffsetSpeedPercent_)
-                {
-                    String val = widget.getText();
-                    core.setProperty(pf, plugin_.DIGIPOT_OFFSET_SPEED_PERCENT, val);
-                }
-
-                if (source == focusDriveRangeMicrons_)
-                {
-                    String val = widget.getText();
-                    core.setProperty(pf, plugin_.FOCUS_DRIVE_RANGE_MICRONS, val);
-                }
-
-                if (source == inFocusRecoveryTimeMs_)
-                {
-                    String val = widget.getText();
-                    core.setProperty(pf, plugin_.IN_FOCUS_RECOVERY_TIME_MS, val);
-                }                        
+                String val = widget.getText();
+                Double value = Double.valueOf(val);
+                core.setProperty(pf, propertyName, value);                
             }
             else if (source.getClass() == JCheckBox.class)
             {
                 JCheckBox widget = (JCheckBox)source;
-    
-                if (source == isPiezoMotor_)
+                if (widget.isSelected())
                 {
-                    Integer value;
-                    if (widget.isSelected())
-                    {
-                        value = 1;
-                    }
-                    else
-                    {
-                        value = 0;                           
-                    }
-                    core.setProperty(pf, plugin_.IS_PIEZO_MOTOR, value);
+                    core.setProperty(pf, propertyName, 1);
                 }
-                
-                if (source == servoOn_)
+                else
                 {
-                    Integer value;
-                    if (widget.isSelected())
-                    {
-                        value = 1;
-                    }
-                    else
-                    {
-                        value = 0;                           
-                    }
-                    core.setProperty(pf, plugin_.SERVO_ON, value);
+                    core.setProperty(pf, propertyName, 0);                          
                 }
-                
-                if (source == servoInhibit_)
-                {
-                    Integer value;
-                    if (widget.isSelected())
-                    {
-                        value = 1;
-                    }
-                    else
-                    {
-                        value = 0;                           
-                    }
-                    core.setProperty(pf, plugin_.SERVO_INHIBIT, value);
-                }
-                
-                if (source == focusInterruptOn_)
-                {
-                    Integer value;
-                    if (widget.isSelected())
-                    {
-                        value = 1;
-                    }
-                    else
-                    {
-                        value = 0;                           
-                    }
-                    core.setProperty(pf, plugin_.FOCUS_INTERRUPT_ON, value);
-                }
-                
-                if (source == interfaceInhibit_)
-                {
-                    Integer value;
-                    if (widget.isSelected())
-                    {
-                        value = 1;
-                    }
-                    else
-                    {
-                        value = 0;                           
-                    }
-                    core.setProperty(pf, plugin_.INTERFACE_INHIBIT, value);
-                }
-                
-                if (source == digipotControlsOffset_)
-                {
-                    Integer value;
-                    if (widget.isSelected())
-                    {
-                        value = 1;
-                    }
-                    else
-                    {
-                        value = 0;                           
-                    }
-                    core.setProperty(pf, plugin_.DIGIPOT_CONTROLS_OFFSET, value);
-                }
-                
-                if (source == isServoDirectionPositive_)
-                {
-                    Integer value;
-                    if (widget.isSelected())
-                    {
-                        value = 1;
-                    }
-                    else
-                    {
-                        value = 0;                           
-                    }
-                    core.setProperty(pf, plugin_.IS_SERVO_DIRECTION_POSITIVE, value);
-                }
-                
-                if (source == isFocusDriveDirectionPositive_)
-                {
-                    Integer value;
-                    if (widget.isSelected())
-                    {
-                        value = 1;
-                    }
-                    else
-                    {
-                        value = 0;                           
-                    }
-                    core.setProperty(pf, plugin_.IS_FOCUS_DRIVE_DIRECTION_POSITIVE, value);
-                }           
             }
             else
             {
@@ -393,25 +315,45 @@ public class PureFocusGlobalTableDialog extends JDialog implements ActionListene
                 
             core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
             
-            // Update current settings
-            updateValues(true);
-            
             core.updateCoreProperties();
             core.updateSystemStateCache();
     	}
 		catch (Exception ex)
 		{
+            // All exceptions need the same basic response
             try
             {
                 // Ensure PureFocus is not left open for changes
                 core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
                 
                 // If something went wrong, update widget value
-                updateValues(true);
+                if (source.getClass() == JTextField.class)
+                {
+                    JTextField widget = (JTextField)source;
+                    widget.setText(core.getProperty(pf, propertyName));
+                }
+                else if (source.getClass() == JCheckBox.class)
+                {
+                    JCheckBox widget = (JCheckBox)source;
+                    widget.setSelected(Integer.valueOf(core.getProperty(pf, propertyName)) != 0);
+                }
+                else
+                {
+                    // Unknown so ignore it
+                }
             }
             catch (Exception e2)
             {
                 // These actions should not be able to fail
+            }
+            
+            if (ex.getClass() == NumberFormatException.class)
+            {
+                gui_.logs().showError("Value is not a number");
+            }
+            else
+            {
+                gui_.logs().showError(ex.getMessage());
             }
         }
 	}

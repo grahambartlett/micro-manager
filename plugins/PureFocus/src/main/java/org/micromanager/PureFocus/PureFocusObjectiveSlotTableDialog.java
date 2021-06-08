@@ -112,85 +112,6 @@ public class PureFocusObjectiveSlotTableDialog extends JDialog implements Action
 	}
     
 
-	private void updateValues(boolean allValues)
-	{
-        String val;
-        int i, limit;
-
-        if (allValues)
-        {
-            for (i = 0; i <= 6; i++)
-            {
-                updateSlot(i);
-            }
-        }
-        else
-        {
-            // Read only current settings
-            updateSlot(0);
-        }
-	}
-    
-    
-	private void updateSlot(int slot)
-	{
-        String pf = parent_.getPureFocus();
-        CMMCore core = gui_.getCMMCore();
-
-        try
-		{
-            String prefix;
-            if (slot == 0)
-            {
-                prefix = plugin_.CURRENT_PREFIX;
-            }
-            else
-            {
-                prefix = plugin_.OBJECTIVE_PREFIX + Integer.toString(slot) + "-";
-            }
-
-            if (slot != 0)
-            {
-                objectivePreset_[slot].setText(core.getProperty(pf, prefix + plugin_.PRESET));
-                
-                int i;
-                for (i = 0; i < 5; i ++)
-                {
-                    lensOffset_[slot][i].setText(core.getProperty(pf, prefix + plugin_.LENS_OFFSET + Integer.toString(i)));
-                }
-            }            
-
-            kP_[slot].setText(core.getProperty(pf, prefix + plugin_.KP));
-            kI_[slot].setText(core.getProperty(pf, prefix + plugin_.KI));
-            kD_[slot].setText(core.getProperty(pf, prefix + plugin_.KD));    
-            outputLimitMinimum_[slot].setText(core.getProperty(pf, prefix + plugin_.OUTPUT_LIMIT_MINIMUM));
-            outputLimitMaximum_[slot].setText(core.getProperty(pf, prefix + plugin_.OUTPUT_LIMIT_MAXIMUM));
-            sampleLowThreshold_[slot].setText(core.getProperty(pf, prefix + plugin_.SAMPLE_LOW_THRESHOLD));
-            focusLowThreshold_[slot].setText(core.getProperty(pf, prefix + plugin_.FOCUS_LOW_THRESHOLD));
-            focusHighThreshold_[slot].setText(core.getProperty(pf, prefix + plugin_.FOCUS_HIGH_THRESHOLD));
-            focusRangeThreshold_[slot].setText(core.getProperty(pf, prefix + plugin_.FOCUS_RANGE_THRESHOLD));
-            interfaceHighThreshold_[slot].setText(core.getProperty(pf, prefix + plugin_.INTERFACE_HIGH_THRESHOLD));
-            interfaceLowThreshold_[slot].setText(core.getProperty(pf, prefix + plugin_.INTERFACE_LOW_THRESHOLD));
-            laserPower_[slot].setText(core.getProperty(pf, prefix + plugin_.LASER_POWER));
-            backgroundA_[slot].setText(core.getProperty(pf, prefix + plugin_.BACKGROUND_A));
-            backgroundB_[slot].setText(core.getProperty(pf, prefix + plugin_.BACKGROUND_B));
-            backgroundC_[slot].setText(core.getProperty(pf, prefix + plugin_.BACKGROUND_C));
-            backgroundD_[slot].setText(core.getProperty(pf, prefix + plugin_.BACKGROUND_D));
-            regionStartD_[slot].setText(core.getProperty(pf, prefix + plugin_.REGION_START_D));
-            regionEndD_[slot].setText(core.getProperty(pf, prefix + plugin_.REGION_END_D));
-            pinholeCentre_[slot].setText(core.getProperty(pf, prefix + plugin_.PINHOLE_CENTRE));
-            pinholeWidth_[slot].setText(core.getProperty(pf, prefix + plugin_.PINHOLE_WIDTH));
-            isServoLimitOn_[slot].setSelected(Long.valueOf(core.getProperty(pf, prefix + plugin_.IS_SERVO_LIMIT_ON)) != 0);
-            servoLimitMaximumPositive_[slot].setText(core.getProperty(pf, prefix + plugin_.SERVO_LIMIT_MAXIMUM_POSITIVE));
-            servoLimitMaximumNegative_[slot].setText(core.getProperty(pf, prefix + plugin_.SERVO_LIMIT_MAXIMUM_NEGATIVE));
-		}
-		catch (Exception ex)
-		{
-			gui_.logs().showError("Error reading values from Prior PureFocus PF-850");
-		}
-	}    
-
-
 	/** This method is called from within the constructor to initialize the form.
 	*/
 	@SuppressWarnings("unchecked")
@@ -243,105 +164,130 @@ public class PureFocusObjectiveSlotTableDialog extends JDialog implements Action
             objectivePreset_[i] = new javax.swing.JTextField();
             objectivePreset_[i].setPreferredSize(new java.awt.Dimension(100, 20));
             objectivePreset_[i].addActionListener(this);
+            objectivePreset_[i].setActionCommand(prefix + plugin_.PRESET);
             
             int j;
             for (j = 0; j < 5; j++)
             {            
                 lensOffset_[i][j] = new javax.swing.JTextField();
                 lensOffset_[i][j].setPreferredSize(new java.awt.Dimension(100, 20));
-                lensOffset_[i][j].addActionListener(this);                
+                lensOffset_[i][j].addActionListener(this);
+                lensOffset_[i][j].setActionCommand(prefix + plugin_.LENS_OFFSET + Integer.toString(j));
             }
             
             kP_[i] = new javax.swing.JTextField();
             kP_[i].setPreferredSize(new java.awt.Dimension(100, 20));
             kP_[i].addActionListener(this);
+            kP_[i].setActionCommand(prefix + plugin_.KP);
 
             kI_[i] = new javax.swing.JTextField();
             kI_[i].setPreferredSize(new java.awt.Dimension(100, 20));
             kI_[i].addActionListener(this);
+            kI_[i].setActionCommand(prefix + plugin_.KI);
 
             kD_[i] = new javax.swing.JTextField();
             kD_[i].setPreferredSize(new java.awt.Dimension(100, 20));
             kD_[i].addActionListener(this);
+            kD_[i].setActionCommand(prefix + plugin_.KD);
             
             outputLimitMinimum_[i] = new javax.swing.JTextField();
             outputLimitMinimum_[i].setPreferredSize(new java.awt.Dimension(100, 20));
             outputLimitMinimum_[i].addActionListener(this);
+            outputLimitMinimum_[i].setActionCommand(prefix + plugin_.OUTPUT_LIMIT_MINIMUM);
             
             outputLimitMaximum_[i] = new javax.swing.JTextField();
             outputLimitMaximum_[i].setPreferredSize(new java.awt.Dimension(100, 20));
             outputLimitMaximum_[i].addActionListener(this);
+            outputLimitMaximum_[i].setActionCommand(prefix + plugin_.OUTPUT_LIMIT_MAXIMUM);
             
             sampleLowThreshold_[i] = new javax.swing.JTextField();
             sampleLowThreshold_[i].setPreferredSize(new java.awt.Dimension(100, 20));
             sampleLowThreshold_[i].addActionListener(this);
+            sampleLowThreshold_[i].setActionCommand(prefix + plugin_.SAMPLE_LOW_THRESHOLD);
             
             focusLowThreshold_[i] = new javax.swing.JTextField();
             focusLowThreshold_[i].setPreferredSize(new java.awt.Dimension(100, 20));
             focusLowThreshold_[i].addActionListener(this);
+            focusLowThreshold_[i].setActionCommand(prefix + plugin_.FOCUS_LOW_THRESHOLD);
             
             focusHighThreshold_[i] = new javax.swing.JTextField();
             focusHighThreshold_[i].setPreferredSize(new java.awt.Dimension(100, 20));
             focusHighThreshold_[i].addActionListener(this);
+            focusHighThreshold_[i].setActionCommand(prefix + plugin_.FOCUS_HIGH_THRESHOLD);
             
             focusRangeThreshold_[i] = new javax.swing.JTextField();
             focusRangeThreshold_[i].setPreferredSize(new java.awt.Dimension(100, 20));
             focusRangeThreshold_[i].addActionListener(this);           
+            focusRangeThreshold_[i].setActionCommand(prefix + plugin_.FOCUS_RANGE_THRESHOLD);
             
             interfaceHighThreshold_[i] = new javax.swing.JTextField();
             interfaceHighThreshold_[i].setPreferredSize(new java.awt.Dimension(100, 20));
             interfaceHighThreshold_[i].addActionListener(this);
+            interfaceHighThreshold_[i].setActionCommand(prefix + plugin_.INTERFACE_HIGH_THRESHOLD);
             
             interfaceLowThreshold_[i] = new javax.swing.JTextField();
             interfaceLowThreshold_[i].setPreferredSize(new java.awt.Dimension(100, 20));
             interfaceLowThreshold_[i].addActionListener(this);
+            interfaceLowThreshold_[i].setActionCommand(prefix + plugin_.INTERFACE_LOW_THRESHOLD);
             
             laserPower_[i] = new javax.swing.JTextField();
             laserPower_[i].setPreferredSize(new java.awt.Dimension(100, 20));
             laserPower_[i].addActionListener(this);
+            laserPower_[i].setActionCommand(prefix + plugin_.LASER_POWER);
 
             backgroundA_[i] = new javax.swing.JTextField();
             backgroundA_[i].setPreferredSize(new java.awt.Dimension(100, 20));
             backgroundA_[i].addActionListener(this);   
+            backgroundA_[i].setActionCommand(prefix + plugin_.BACKGROUND_A);
             
             backgroundB_[i] = new javax.swing.JTextField();
             backgroundB_[i].setPreferredSize(new java.awt.Dimension(100, 20));
             backgroundB_[i].addActionListener(this);
+            backgroundB_[i].setActionCommand(prefix + plugin_.BACKGROUND_B);
 
             backgroundC_[i] = new javax.swing.JTextField();
             backgroundC_[i].setPreferredSize(new java.awt.Dimension(100, 20));
             backgroundC_[i].addActionListener(this);
+            backgroundC_[i].setActionCommand(prefix + plugin_.BACKGROUND_C);
 
             backgroundD_[i] = new javax.swing.JTextField();
             backgroundD_[i].setPreferredSize(new java.awt.Dimension(100, 20));
-            backgroundD_[i].addActionListener(this);          
+            backgroundD_[i].addActionListener(this);   
+            backgroundD_[i].setActionCommand(prefix + plugin_.BACKGROUND_D);
             
             regionStartD_[i] = new javax.swing.JTextField();
             regionStartD_[i].setPreferredSize(new java.awt.Dimension(100, 20));
             regionStartD_[i].addActionListener(this);
+            regionStartD_[i].setActionCommand(prefix + plugin_.REGION_START_D);
 
             regionEndD_[i] = new javax.swing.JTextField();
             regionEndD_[i].setPreferredSize(new java.awt.Dimension(100, 20));
             regionEndD_[i].addActionListener(this);
+            regionEndD_[i].setActionCommand(prefix + plugin_.REGION_END_D);
             
             pinholeCentre_[i] = new javax.swing.JTextField();
             pinholeCentre_[i].setPreferredSize(new java.awt.Dimension(100, 20));
             pinholeCentre_[i].addActionListener(this);
+            pinholeCentre_[i].setActionCommand(prefix + plugin_.PINHOLE_CENTRE);
 
             pinholeWidth_[i] = new javax.swing.JTextField();
             pinholeWidth_[i].setPreferredSize(new java.awt.Dimension(100, 20));
             pinholeWidth_[i].addActionListener(this);
+            pinholeWidth_[i].setActionCommand(prefix + plugin_.PINHOLE_WIDTH);
             
             isServoLimitOn_[i] = new javax.swing.JCheckBox();
-            isServoLimitOn_[i].addActionListener(this);            
+            isServoLimitOn_[i].addActionListener(this);     
+            isServoLimitOn_[i].setActionCommand(prefix + plugin_.IS_SERVO_LIMIT_ON);
 
             servoLimitMaximumPositive_[i] = new javax.swing.JTextField();
             servoLimitMaximumPositive_[i].setPreferredSize(new java.awt.Dimension(100, 20));
             servoLimitMaximumPositive_[i].addActionListener(this);
+            servoLimitMaximumPositive_[i].setActionCommand(prefix + plugin_.SERVO_LIMIT_MAXIMUM_POSITIVE);
             
             servoLimitMaximumNegative_[i] = new javax.swing.JTextField();
             servoLimitMaximumNegative_[i].setPreferredSize(new java.awt.Dimension(100, 20));
-            servoLimitMaximumNegative_[i].addActionListener(this);        
+            servoLimitMaximumNegative_[i].addActionListener(this); 
+            servoLimitMaximumNegative_[i].setActionCommand(prefix + plugin_.SERVO_LIMIT_MAXIMUM_NEGATIVE);
         }
         
         // All current properties are read-only
@@ -591,281 +537,232 @@ public class PureFocusObjectiveSlotTableDialog extends JDialog implements Action
         pack();
 	}
 
-				
+
+    private void updateValues(boolean allValues)
+	{
+        String val;
+        int i, limit;
+
+        if (allValues)
+        {
+            for (i = 0; i <= 6; i++)
+            {
+                updateSlot(i);
+            }
+        }
+        else
+        {
+            // Read only current settings
+            updateSlot(0);
+        }
+	}
+    
+    
+	private void updateSlot(int slot)
+	{
+        String pf = parent_.getPureFocus();
+        CMMCore core = gui_.getCMMCore();
+
+        try
+		{
+            if (slot == 0)
+            {
+                String prefix = plugin_.CURRENT_PREFIX;
+                
+                kP_[slot].setText(core.getProperty(pf, prefix + plugin_.KP));
+                kI_[slot].setText(core.getProperty(pf, prefix + plugin_.KI));
+                kD_[slot].setText(core.getProperty(pf, prefix + plugin_.KD));    
+                outputLimitMinimum_[slot].setText(core.getProperty(pf, prefix + plugin_.OUTPUT_LIMIT_MINIMUM));
+                outputLimitMaximum_[slot].setText(core.getProperty(pf, prefix + plugin_.OUTPUT_LIMIT_MAXIMUM));
+                sampleLowThreshold_[slot].setText(core.getProperty(pf, prefix + plugin_.SAMPLE_LOW_THRESHOLD));
+                focusLowThreshold_[slot].setText(core.getProperty(pf, prefix + plugin_.FOCUS_LOW_THRESHOLD));
+                focusHighThreshold_[slot].setText(core.getProperty(pf, prefix + plugin_.FOCUS_HIGH_THRESHOLD));
+                focusRangeThreshold_[slot].setText(core.getProperty(pf, prefix + plugin_.FOCUS_RANGE_THRESHOLD));
+                interfaceHighThreshold_[slot].setText(core.getProperty(pf, prefix + plugin_.INTERFACE_HIGH_THRESHOLD));
+                interfaceLowThreshold_[slot].setText(core.getProperty(pf, prefix + plugin_.INTERFACE_LOW_THRESHOLD));
+                laserPower_[slot].setText(core.getProperty(pf, prefix + plugin_.LASER_POWER));
+                backgroundA_[slot].setText(core.getProperty(pf, prefix + plugin_.BACKGROUND_A));
+                backgroundB_[slot].setText(core.getProperty(pf, prefix + plugin_.BACKGROUND_B));
+                backgroundC_[slot].setText(core.getProperty(pf, prefix + plugin_.BACKGROUND_C));
+                backgroundD_[slot].setText(core.getProperty(pf, prefix + plugin_.BACKGROUND_D));
+                regionStartD_[slot].setText(core.getProperty(pf, prefix + plugin_.REGION_START_D));
+                regionEndD_[slot].setText(core.getProperty(pf, prefix + plugin_.REGION_END_D));
+                pinholeCentre_[slot].setText(core.getProperty(pf, prefix + plugin_.PINHOLE_CENTRE));
+                pinholeWidth_[slot].setText(core.getProperty(pf, prefix + plugin_.PINHOLE_WIDTH));
+                isServoLimitOn_[slot].setSelected(Long.valueOf(core.getProperty(pf, prefix + plugin_.IS_SERVO_LIMIT_ON)) != 0);
+                servoLimitMaximumPositive_[slot].setText(core.getProperty(pf, prefix + plugin_.SERVO_LIMIT_MAXIMUM_POSITIVE));
+                servoLimitMaximumNegative_[slot].setText(core.getProperty(pf, prefix + plugin_.SERVO_LIMIT_MAXIMUM_NEGATIVE));                
+            }
+            else
+            {
+                String prefix = plugin_.OBJECTIVE_PREFIX + Integer.toString(slot) + "-";
+                String value;
+ 
+                value = core.getProperty(pf, prefix + plugin_.PRESET);
+                core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.PRESET, value);
+                objectivePreset_[slot].setText(value);
+                
+                int i;
+                for (i = 0; i < 5; i ++)
+                {
+                    value = core.getProperty(pf, prefix + plugin_.LENS_OFFSET + Integer.toString(i));
+                    core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.LENS_OFFSET + Integer.toString(i), value);
+                    lensOffset_[slot][i].setText(value);
+                }
+                
+                value = core.getProperty(pf, prefix + plugin_.KP);
+                core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.KP, value);
+                kP_[slot].setText(value);
+                
+                value = core.getProperty(pf, prefix + plugin_.KI);
+                core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.KI, value);
+                kI_[slot].setText(value);
+                
+                value = core.getProperty(pf, prefix + plugin_.KD);
+                core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.KD, value);
+                kD_[slot].setText(value);
+                
+                value = core.getProperty(pf, prefix + plugin_.OUTPUT_LIMIT_MINIMUM);
+                core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.OUTPUT_LIMIT_MINIMUM, value);
+                outputLimitMinimum_[slot].setText(value);
+                
+                value = core.getProperty(pf, prefix + plugin_.OUTPUT_LIMIT_MAXIMUM);
+                core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.OUTPUT_LIMIT_MAXIMUM, value);
+                outputLimitMaximum_[slot].setText(value);
+                
+                value = core.getProperty(pf, prefix + plugin_.SAMPLE_LOW_THRESHOLD);
+                core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.SAMPLE_LOW_THRESHOLD, value);
+                sampleLowThreshold_[slot].setText(value);
+                
+                value = core.getProperty(pf, prefix + plugin_.FOCUS_LOW_THRESHOLD);
+                core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.FOCUS_LOW_THRESHOLD, value);
+                focusLowThreshold_[slot].setText(value);
+                
+                value = core.getProperty(pf, prefix + plugin_.FOCUS_HIGH_THRESHOLD);
+                core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.FOCUS_HIGH_THRESHOLD, value);
+                focusHighThreshold_[slot].setText(value);
+                
+                value = core.getProperty(pf, prefix + plugin_.FOCUS_RANGE_THRESHOLD);
+                core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.FOCUS_RANGE_THRESHOLD, value);
+                focusRangeThreshold_[slot].setText(value);
+                
+                value = core.getProperty(pf, prefix + plugin_.INTERFACE_HIGH_THRESHOLD);
+                core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.INTERFACE_HIGH_THRESHOLD, value);
+                interfaceHighThreshold_[slot].setText(value);
+                
+                value = core.getProperty(pf, prefix + plugin_.INTERFACE_LOW_THRESHOLD);
+                core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.INTERFACE_LOW_THRESHOLD, value);
+                interfaceLowThreshold_[slot].setText(value);
+                
+                value = core.getProperty(pf, prefix + plugin_.LASER_POWER);
+                core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.LASER_POWER, value);
+                laserPower_[slot].setText(value);
+                
+                value = core.getProperty(pf, prefix + plugin_.BACKGROUND_A);
+                core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.BACKGROUND_A, value);
+                backgroundA_[slot].setText(value);
+                
+                value = core.getProperty(pf, prefix + plugin_.BACKGROUND_B);
+                core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.BACKGROUND_B, value);
+                backgroundB_[slot].setText(value);
+                
+                value = core.getProperty(pf, prefix + plugin_.BACKGROUND_C);
+                core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.BACKGROUND_C, value);
+                backgroundC_[slot].setText(value);
+                
+                value = core.getProperty(pf, prefix + plugin_.BACKGROUND_D);
+                core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.BACKGROUND_D, value);
+                backgroundD_[slot].setText(value);
+                
+                value = core.getProperty(pf, prefix + plugin_.REGION_START_D);
+                core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.REGION_START_D, value);
+                regionStartD_[slot].setText(value);
+                
+                value = core.getProperty(pf, prefix + plugin_.REGION_END_D);
+                core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.REGION_END_D, value);
+                regionEndD_[slot].setText(value);
+                
+                value = core.getProperty(pf, prefix + plugin_.PINHOLE_CENTRE);
+                core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.PINHOLE_CENTRE, value);
+                pinholeCentre_[slot].setText(value);
+                
+                value = core.getProperty(pf, prefix + plugin_.PINHOLE_WIDTH);
+                core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.PINHOLE_WIDTH, value);
+                pinholeWidth_[slot].setText(value);
+                
+                value = core.getProperty(pf, prefix + plugin_.IS_SERVO_LIMIT_ON);
+                core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.IS_SERVO_LIMIT_ON, value);
+                isServoLimitOn_[slot].setText(value);
+                
+                value = core.getProperty(pf, prefix + plugin_.SERVO_LIMIT_MAXIMUM_POSITIVE);
+                core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.SERVO_LIMIT_MAXIMUM_POSITIVE, value);
+                servoLimitMaximumPositive_[slot].setText(value);
+                
+                value = core.getProperty(pf, prefix + plugin_.SERVO_LIMIT_MAXIMUM_NEGATIVE);
+                core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.SERVO_LIMIT_MAXIMUM_NEGATIVE, value);
+                servoLimitMaximumNegative_[slot].setText(value);
+            }
+		}
+		catch (Exception ex)
+		{
+			gui_.logs().showError(ex.getMessage());
+		}
+	}    
+    
+    
     @Override
     public void actionPerformed(ActionEvent e)
 	{
         String pf = parent_.getPureFocus();
         CMMCore core = gui_.getCMMCore();            
         Object source = e.getSource();
+        String propertyName = e.getActionCommand();
         
 		try
 		{
             int slot = 0;
             core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
             
+            // Work out slot number from property name
+            int slotStart = propertyName.indexOf(plugin_.OBJECTIVE_PREFIX);
+            if (slotStart >= 0)
+            {
+                int index = slotStart + plugin_.OBJECTIVE_PREFIX.length();
+                slot = Integer.valueOf(propertyName.substring(index, index + 1));
+            }
+            
             if (source.getClass() == JTextField.class)
             {
                 JTextField widget = (JTextField)source;
-                int i = 0;
-
-                for (i = 1; i <= 6; i++)
-                {
-                    String prefix = plugin_.OBJECTIVE_PREFIX + Integer.toString(i) + "-";
-
-                    if (source == objectivePreset_[i])
-                    {
-                        String val = widget.getText();
-                        core.setProperty(pf, prefix + plugin_.PRESET, val);
-                        break;
-                    }
-                    
-                    if (source == lensOffset_[i][0])
-                    {
-                        String val = widget.getText();
-                        core.setProperty(pf, prefix + plugin_.LENS_OFFSET + "0", val);
-                        break;
-                    }
-                    
-                    if (source == lensOffset_[i][1])
-                    {
-                        String val = widget.getText();
-                        core.setProperty(pf, prefix + plugin_.LENS_OFFSET + "1", val);
-                        break;
-                    }
-                    
-                    if (source == lensOffset_[i][2])
-                    {
-                        String val = widget.getText();
-                        core.setProperty(pf, prefix + plugin_.LENS_OFFSET + "2", val);
-                        break;
-                    }
-                    
-                    if (source == lensOffset_[i][3])
-                    {
-                        String val = widget.getText();
-                        core.setProperty(pf, prefix + plugin_.LENS_OFFSET + "3", val);
-                        break;
-                    }
-                    
-                    if (source == lensOffset_[i][4])
-                    {
-                        String val = widget.getText();
-                        core.setProperty(pf, prefix + plugin_.LENS_OFFSET + "4", val);
-                        break;
-                    }
- 
-                    if (source == kP_[i])
-                    {
-                        String val = widget.getText();
-                        Double value = Double.valueOf(val);
-                        core.setProperty(pf, prefix + plugin_.KP, value);
-                        break;
-                    }
-
-                    if (source == kI_[i])
-                    {
-                        String val = widget.getText();
-                        Double value = Double.valueOf(val);
-                        core.setProperty(pf, prefix + plugin_.KI, value);
-                        break;
-                    }                
-
-                    if (source == kD_[i])
-                    {
-                        String val = widget.getText();
-                        Double value = Double.valueOf(val);
-                        core.setProperty(pf, prefix + plugin_.KD, value);
-                        break;
-                    }
-
-                    if (source == outputLimitMinimum_[i])
-                    {
-                        String val = widget.getText();
-                        Double value = Double.valueOf(val);
-                        core.setProperty(pf, prefix + plugin_.OUTPUT_LIMIT_MINIMUM, value);
-                        break;
-                    }
-
-                    if (source == outputLimitMaximum_[i])
-                    {
-                        String val = widget.getText();
-                        Double value = Double.valueOf(val);
-                        core.setProperty(pf, prefix + plugin_.OUTPUT_LIMIT_MAXIMUM, value);
-                        break;
-                    }                
-
-                    if (source == sampleLowThreshold_[i])
-                    {
-                        String val = widget.getText();
-                        Double value = Double.valueOf(val);
-                        core.setProperty(pf, prefix + plugin_.SAMPLE_LOW_THRESHOLD, value);
-                        break;
-                    }
-    
-                    if (source == focusLowThreshold_[i])
-                    {
-                        String val = widget.getText();
-                        Double value = Double.valueOf(val);
-                        core.setProperty(pf, prefix + plugin_.FOCUS_LOW_THRESHOLD, value);
-                        break;
-                    }
-
-                    if (source == focusHighThreshold_[i])
-                    {
-                        String val = widget.getText();
-                        Double value = Double.valueOf(val);
-                        core.setProperty(pf, prefix + plugin_.FOCUS_HIGH_THRESHOLD, value);
-                        break;
-                    }                
-
-                    if (source == focusRangeThreshold_[i])
-                    {
-                        String val = widget.getText();
-                        Double value = Double.valueOf(val);
-                        core.setProperty(pf, prefix + plugin_.FOCUS_RANGE_THRESHOLD, value);
-                        break;
-                    }                    
-
-                    if (source == interfaceHighThreshold_[i])
-                    {
-                        String val = widget.getText();
-                        Double value = Double.valueOf(val);
-                        core.setProperty(pf, prefix + plugin_.INTERFACE_HIGH_THRESHOLD, value);
-                        break;
-                    }                
-
-                    if (source == interfaceLowThreshold_[i])
-                    {
-                        String val = widget.getText();
-                        Double value = Double.valueOf(val);
-                        core.setProperty(pf, prefix + plugin_.INTERFACE_LOW_THRESHOLD, value);
-                        break;
-                    }
-
-                   if (source == laserPower_[i])
-                    {
-                        String val = widget.getText();
-                        Double value = Double.valueOf(val);
-                        core.setProperty(pf, prefix + plugin_.LASER_POWER, value);
-                        break;
-                    }
-
-                    if (source == backgroundA_[i])
-                    {
-                        String val = widget.getText();
-                        Double value = Double.valueOf(val);
-                        core.setProperty(pf, prefix + plugin_.BACKGROUND_A, value);
-                        break;
-                    }
-
-                    if (source == backgroundB_[i])
-                    {
-                        String val = widget.getText();
-                        Double value = Double.valueOf(val);
-                        core.setProperty(pf, prefix + plugin_.BACKGROUND_B, value);
-                        break;
-                    }
-
-                    if (source == backgroundC_[i])
-                    {
-                        String val = widget.getText();
-                        Double value = Double.valueOf(val);
-                        core.setProperty(pf, prefix + plugin_.BACKGROUND_C, value);
-                        break;
-                    }
-
-                    if (source == backgroundD_[i])
-                    {
-                        String val = widget.getText();
-                        Double value = Double.valueOf(val);
-                        core.setProperty(pf, prefix + plugin_.BACKGROUND_D, value);
-                        break;
-                    }
-                    
-                    if (source == regionStartD_[i])
-                    {
-                        String val = widget.getText();
-                        Double value = Double.valueOf(val);
-                        core.setProperty(pf, prefix + plugin_.REGION_START_D, value);
-                        break;
-                    }
-                    
-                    if (source == regionEndD_[i])
-                    {
-                        String val = widget.getText();
-                        Double value = Double.valueOf(val);
-                        core.setProperty(pf, prefix + plugin_.REGION_END_D, value);
-                        break;
-                    }
-
-                    if (source == pinholeCentre_[i])
-                    {
-                        String val = widget.getText();
-                        Double value = Double.valueOf(val);
-                        core.setProperty(pf, prefix + plugin_.PINHOLE_CENTRE, value);
-                        break;
-                    }                    
-
-                    if (source == pinholeWidth_[i])
-                    {
-                        String val = widget.getText();
-                        Double value = Double.valueOf(val);
-                        core.setProperty(pf, prefix + plugin_.PINHOLE_WIDTH, value);
-                        break;
-                    }
-
-                    if (source == servoLimitMaximumPositive_[i])
-                    {
-                        String val = widget.getText();
-                        Double value = Double.valueOf(val);
-                        core.setProperty(pf, prefix + plugin_.SERVO_LIMIT_MAXIMUM_POSITIVE, value);
-                        break;
-                    }
-
-                    if (source == servoLimitMaximumNegative_[i])
-                    {
-                        String val = widget.getText();
-                        Double value = Double.valueOf(val);
-                        core.setProperty(pf, prefix + plugin_.SERVO_LIMIT_MAXIMUM_NEGATIVE, value);
-                        break;
-                    }                            
-                }
+                String val = widget.getText();
                 
-                if (i <= 6)
+                if ((widget == objectivePreset_[1]) ||
+                    (widget == objectivePreset_[2]) ||
+                    (widget == objectivePreset_[3]) ||
+                    (widget == objectivePreset_[4]) ||
+                    (widget == objectivePreset_[5]) ||
+                    (widget == objectivePreset_[6]))
                 {
-                    slot = i;
+                    // These take text values
+                    core.setProperty(pf, propertyName, val);
+                }
+                else
+                {
+                    Double value = Double.valueOf(val);
+                    core.setProperty(pf, propertyName, value);
                 }
             }
             else if (source.getClass() == JCheckBox.class)
             {
                 JCheckBox widget = (JCheckBox)source;
-                int i;
-
-                for (i = 1; i <= 6; i++)
+                if (widget.isSelected())
                 {
-                    String prefix = plugin_.OBJECTIVE_PREFIX + Integer.toString(i) + "-";
-
-                    if (source == isServoLimitOn_[i])
-                    {
-                        Integer value;
-                        if (widget.isSelected())
-                        {
-                            value = 1;
-                        }
-                        else
-                        {
-                            value = 0;                           
-                        }
-                        core.setProperty(pf, prefix + plugin_.IS_SERVO_LIMIT_ON, value);
-                        break;
-                    }
+                    core.setProperty(pf, propertyName, 1);
                 }
-                     
-                if (i <= 6)
+                else
                 {
-                    slot = i;
-                }                
+                    core.setProperty(pf, propertyName, 0);                          
+                }            
             }
             else
             {
@@ -884,10 +781,11 @@ public class PureFocusObjectiveSlotTableDialog extends JDialog implements Action
             updateSlot(0);
             
             core.updateCoreProperties();
-            core.updateSystemStateCache();
+            core.updateSystemStateCache();            
     	}
 		catch (Exception ex)
 		{
+            // All exceptions need the same basic response
             try
             {
                 // Ensure PureFocus is not left open for changes
@@ -897,199 +795,12 @@ public class PureFocusObjectiveSlotTableDialog extends JDialog implements Action
                 if (source.getClass() == JTextField.class)
                 {
                     JTextField widget = (JTextField)source;
-                    int i;
-
-                    for (i = 1; i <= 6; i++)
-                    {
-                        String prefix = plugin_.OBJECTIVE_PREFIX + Integer.toString(i) + "-";
-
-                        if (source == objectivePreset_[i])
-                        {
-                            widget.setText(core.getProperty(pf, prefix + plugin_.PRESET));
-                            break;
-                        }
-                        
-                        if (source == lensOffset_[i][0])
-                        {
-                            widget.setText(core.getProperty(pf, prefix + plugin_.LENS_OFFSET + "0"));
-                            break;
-                        }
-                        
-                        if (source == lensOffset_[i][1])
-                        {
-                            widget.setText(core.getProperty(pf, prefix + plugin_.LENS_OFFSET + "1"));
-                            break;
-                        }  
-                        
-                        if (source == lensOffset_[i][2])
-                        {
-                            widget.setText(core.getProperty(pf, prefix + plugin_.LENS_OFFSET + "2"));
-                            break;
-                        }  
-                        
-                        if (source == lensOffset_[i][3])
-                        {
-                            widget.setText(core.getProperty(pf, prefix + plugin_.LENS_OFFSET + "3"));
-                            break;
-                        }  
-                        
-                        if (source == lensOffset_[i][4])
-                        {
-                            widget.setText(core.getProperty(pf, prefix + plugin_.LENS_OFFSET + "4"));
-                            break;
-                        } 
-                        
-                        if (source == kP_[i])
-                        {
-                            widget.setText(core.getProperty(pf, prefix + plugin_.KP));
-                            break;
-                        }
-
-                        if (source == kI_[i])
-                        {
-                            widget.setText(core.getProperty(pf, prefix + plugin_.KI));
-                            break;
-                        }                
-
-                        if (source == kD_[i])
-                        {
-                            widget.setText(core.getProperty(pf, prefix + plugin_.KD));
-                            break;
-                        }
-    
-                        if (source == outputLimitMinimum_[i])
-                        {
-                            widget.setText(core.getProperty(pf, prefix + plugin_.OUTPUT_LIMIT_MINIMUM));
-                            break;
-                        }
-
-                        if (source == outputLimitMaximum_[i])
-                        {
-                            widget.setText(core.getProperty(pf, prefix + plugin_.OUTPUT_LIMIT_MAXIMUM));
-                            break;
-                        }                
-
-                        if (source == sampleLowThreshold_[i])
-                        {
-                            widget.setText(core.getProperty(pf, prefix + plugin_.SAMPLE_LOW_THRESHOLD));
-                            break;
-                        }
-    
-                        if (source == focusLowThreshold_[i])
-                        {
-                            widget.setText(core.getProperty(pf, prefix + plugin_.FOCUS_LOW_THRESHOLD));
-                            break;
-                        }
-
-                        if (source == focusHighThreshold_[i])
-                        {
-                            widget.setText(core.getProperty(pf, prefix + plugin_.FOCUS_HIGH_THRESHOLD));
-                            break;
-                        }                
-
-                        if (source == focusRangeThreshold_[i])
-                        {
-                            widget.setText(core.getProperty(pf, prefix + plugin_.FOCUS_RANGE_THRESHOLD));
-                            break;
-                        }                        
-                        
-                        if (source == interfaceHighThreshold_[i])
-                        {
-                            widget.setText(core.getProperty(pf, prefix + plugin_.INTERFACE_HIGH_THRESHOLD));
-                            break;
-                        }                
-
-                        if (source == interfaceLowThreshold_[i])
-                        {
-                            widget.setText(core.getProperty(pf, prefix + plugin_.INTERFACE_LOW_THRESHOLD));
-                            break;
-                        }
-
-                        if (source == laserPower_[i])
-                        {
-                            widget.setText(core.getProperty(pf, prefix + plugin_.LASER_POWER));
-                            break;
-                        }
-
-                        if (source == backgroundA_[i])
-                        {
-                            widget.setText(core.getProperty(pf, prefix + plugin_.BACKGROUND_A));
-                            break;
-                        }
-
-                        if (source == backgroundB_[i])
-                        {
-                            widget.setText(core.getProperty(pf, prefix + plugin_.BACKGROUND_B));
-                            break;
-                        }
-
-                        if (source == backgroundC_[i])
-                        {
-                            widget.setText(core.getProperty(pf, prefix + plugin_.BACKGROUND_C));
-                            break;
-                        }
-
-                        if (source == backgroundD_[i])
-                        {
-                            widget.setText(core.getProperty(pf, prefix + plugin_.BACKGROUND_D));
-                            break;
-                        }
-
-                        if (source == regionStartD_[i])
-                        {
-                            widget.setText(core.getProperty(pf, prefix + plugin_.REGION_START_D));
-                            break;
-                        }
-
-                        if (source == regionEndD_[i])
-                        {
-                            widget.setText(core.getProperty(pf, prefix + plugin_.REGION_END_D));
-                            break;
-                        }                                             
-
-                        if (source == pinholeCentre_[i])
-                        {
-                            widget.setText(core.getProperty(pf, prefix + plugin_.PINHOLE_CENTRE));
-                            break;
-                        }                    
-
-                        if (source == pinholeWidth_[i])
-                        {
-                            widget.setText(core.getProperty(pf, prefix + plugin_.PINHOLE_CENTRE));
-                            break;
-                        }
-
-                        if (source == servoLimitMaximumPositive_[i])
-                        {
-                            widget.setText(core.getProperty(pf, prefix + plugin_.SERVO_LIMIT_MAXIMUM_POSITIVE));
-                            break;
-                        }
-    
-                        if (source == servoLimitMaximumNegative_[i])
-                        {
-                            widget.setText(core.getProperty(pf, prefix + plugin_.SERVO_LIMIT_MAXIMUM_NEGATIVE));
-                            break;
-                        }             
-                    }
+                    widget.setText(core.getProperty(pf, propertyName));
                 }
                 else if (source.getClass() == JCheckBox.class)
                 {
                     JCheckBox widget = (JCheckBox)source;
-                    int i;
-
-                    for (i = 1; i <= 6; i++)
-                    {
-                        String prefix = plugin_.OBJECTIVE_PREFIX + Integer.toString(i) + "-";
-
-                        if (source == isServoLimitOn_[i])
-                        {
-                            String value = core.getProperty(pf, prefix + plugin_.IS_SERVO_LIMIT_ON);
-                            Integer val = Integer.valueOf(value);
-                            boolean valBool = (val != 0);
-                            widget.setSelected(valBool);
-                            break;
-                        }
-                    }
+                    widget.setSelected(Integer.valueOf(core.getProperty(pf, propertyName)) != 0);
                 }
                 else
                 {
@@ -1099,6 +810,15 @@ public class PureFocusObjectiveSlotTableDialog extends JDialog implements Action
             catch (Exception e2)
             {
                 // These actions should not be able to fail
+            }
+            
+            if (ex.getClass() == NumberFormatException.class)
+            {
+                gui_.logs().showError("Value is not a number");
+            }
+            else
+            {
+                gui_.logs().showError(ex.getMessage());
             }
         }
 	}

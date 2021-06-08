@@ -177,20 +177,20 @@ public class PureFocus implements MenuPlugin, SciJavaPlugin
                 {
                     // Get the device ready for the new configuration
                     core.setProperty(DEVICE_NAME, CONFIG_IN_PROGRESS, 1);
-
-                    // Load in the PureFocus configuration
-                    core.setConfig(CONFIG_GROUP, CONFIG_GROUP_PRESET);
-                    
-                    /** @todo Check that the configuration does actually load all settings.
-                     * For missing settings, push defaults back to the config group preset
-                     * so that they will be saved.
-                     */
-
-                    // Once the configuration is loaded, enable normal running
-                    core.setProperty(DEVICE_NAME, CONFIG_IN_PROGRESS, 0);
                 }
                 catch (Exception e)
                 {
+                    // Never fails
+                }
+                
+                try
+                {
+                    // Load in the PureFocus configuration
+                    core.setConfig(CONFIG_GROUP, CONFIG_GROUP_PRESET);
+                }
+                catch (Exception e)
+                {
+                    // Create configuration
                     try
                     {
                         core.defineConfigGroup(CONFIG_GROUP);        
@@ -199,49 +199,57 @@ public class PureFocus implements MenuPlugin, SciJavaPlugin
                     {
                         // May happen if config group already exists, in which case it's already OK
                     }
-
+                    
                     try
                     {
-                        core.defineConfig(CONFIG_GROUP, CONFIG_GROUP_PRESET);               
+                        core.defineConfig(CONFIG_GROUP, CONFIG_GROUP_PRESET);           
                     }
                     catch (Exception e2)
                     {
-                        // Should never happen
-                    }            
-
-                    StrVector propertyNames;
-                    try
+                        // Should never fail
+                    }                    
+                }
+                
+                try
+                {
+                    /* If a config group was just created, we must push its values
+                    back to the configuration.  Even if a config group existed though,
+                    we cannot assume that the configuration file has a complete set
+                    of parameters (especially if the plugin has changed to add more),
+                    so push all parameters back to the configuration.  Values have
+                    not changed during this, so existing values will remain the same.
+                    */
+                    StrVector propertyNames = core.getDevicePropertyNames(DEVICE_NAME);
+                    for(String propertyName: propertyNames)
                     {
-                        // This makes changes to the properties when it sets the config, so
-                        // we need to prepare for a config change
-                        core.setProperty(DEVICE_NAME, CONFIG_IN_PROGRESS, 1);    
-
-                        propertyNames = core.getDevicePropertyNames(DEVICE_NAME);
-
-                        for(String propertyName: propertyNames)
+                        if (propertyName.startsWith(OBJECTIVE_PREFIX + "1") ||
+                            propertyName.startsWith(OBJECTIVE_PREFIX + "2") ||
+                            propertyName.startsWith(OBJECTIVE_PREFIX + "3") ||
+                            propertyName.startsWith(OBJECTIVE_PREFIX + "4") ||
+                            propertyName.startsWith(OBJECTIVE_PREFIX + "5") ||
+                            propertyName.startsWith(OBJECTIVE_PREFIX + "6") ||
+                            propertyName.startsWith(GLOBAL_PREFIX))
                         {
-                            if (propertyName.startsWith(OBJECTIVE_PREFIX + "1") ||
-                                propertyName.startsWith(OBJECTIVE_PREFIX + "2") ||
-                                propertyName.startsWith(OBJECTIVE_PREFIX + "3") ||
-                                propertyName.startsWith(OBJECTIVE_PREFIX + "4") ||
-                                propertyName.startsWith(OBJECTIVE_PREFIX + "5") ||
-                                propertyName.startsWith(OBJECTIVE_PREFIX + "6") ||
-                                propertyName.startsWith(GLOBAL_PREFIX))
-                            {
-                                String value = core.getProperty(DEVICE_NAME, propertyName);
-                                core.defineConfig(CONFIG_GROUP, CONFIG_GROUP_PRESET, DEVICE_NAME, propertyName, value);
-                            }
+                            String value = core.getProperty(DEVICE_NAME, propertyName);
+                            core.defineConfig(CONFIG_GROUP, CONFIG_GROUP_PRESET, DEVICE_NAME, propertyName, value);
                         }
-
-                        // Once the configuration is loaded, enable normal running
-                        core.setProperty(DEVICE_NAME, CONFIG_IN_PROGRESS, 0);                
-                    }
-                    catch (Exception e2)
-                    {
-                        // Should never happen
                     }
                 }
+                catch (Exception e)
+                {
+                    // Should never fail
+                }                  
             }
+            
+            try
+            {
+                // Once the configuration is loaded, enable normal running
+                core.setProperty(DEVICE_NAME, CONFIG_IN_PROGRESS, 0);
+            }
+            catch (Exception e)
+            {
+                // Never fails
+            }             
         }
     }
    
