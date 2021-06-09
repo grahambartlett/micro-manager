@@ -692,7 +692,7 @@ public class PureFocusObjectiveSlotTableDialog extends JDialog implements Action
                 
                 value = core.getProperty(pf, prefix + plugin_.IS_SERVO_LIMIT_ON);
                 core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.IS_SERVO_LIMIT_ON, value);
-                isServoLimitOn_[slot].setText(value);
+                isServoLimitOn_[slot].setSelected(Long.valueOf(value) != 0);
                 
                 value = core.getProperty(pf, prefix + plugin_.SERVO_LIMIT_MAXIMUM_POSITIVE);
                 core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.SERVO_LIMIT_MAXIMUM_POSITIVE, value);

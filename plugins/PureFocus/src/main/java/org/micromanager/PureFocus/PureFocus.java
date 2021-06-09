@@ -95,6 +95,25 @@ public class PureFocus implements MenuPlugin, SciJavaPlugin
     public static final String FOCUS_DRIVE_RANGE_MICRONS = "Global-FocusDriveRangeMicrons";
     public static final String IN_FOCUS_RECOVERY_TIME_MS = "Global-InFocusRecoveryTimeMs";
 
+    // Names of volatile settings not saved
+    // NOTE: These must match the C++ device adapter property names
+    public static final String OBJECTIVE = "Setting-Objective";
+    public static final String OFFSET_POSITION_MICRONS = "Setting-OffsetPositionMicrons";
+    public static final String FOCUS_POSITION_MICRONS = "Setting-FocusPositionMicrons";
+
+    // Names of status values read back
+    // NOTE: These must match the C++ device adapter property names    
+    public static final String CALCULATION_ABCD = "Status-CalculationABCD";
+    public static final String FOCUS_PID_TARGET = "Status-FocusPidTarget";
+    public static final String FOCUS_PID_POSITION = "Status-FocusPidPosition";
+    public static final String FOCUS_PID_ERROR = "Status-FocusPidError";
+    public static final String FOCUS_PID_OUTPUT = "Status-FocusPidOutput";
+    public static final String FOCUS_STATE = "Status-FocusState";
+    public static final String TIME_TO_IN_FOCUS = "Status-TimeToInFocus";
+    public static final String IS_OFFSET_MOVING = "Status-IsOffsetMoving";
+    public static final String IS_FOCUS_DRIVE_MOVING = "Status-IsFocusDriveMoving";
+    public static final String POSITIVE_LIMIT_SWITCH = "Status-PositiveLimitSwitch";
+    public static final String NEGATIVE_LIMIT_SWITCH = "Status-NegativeLimitSwitch";    
     
     @Override
     public void setContext(Studio app)
@@ -212,13 +231,12 @@ public class PureFocus implements MenuPlugin, SciJavaPlugin
                 
                 try
                 {
-                    /* If a config group was just created, we must push its values
-                    back to the configuration.  Even if a config group existed though,
-                    we cannot assume that the configuration file has a complete set
-                    of parameters (especially if the plugin has changed to add more),
-                    so push all parameters back to the configuration.  Values have
-                    not changed during this, so existing values will remain the same.
-                    */
+                    // If a config group was just created, we must push its values
+                    // back to the configuration.  Even if a config group existed though,
+                    // we cannot assume that the configuration file has a complete set
+                    // of parameters (especially if the plugin has changed to add more),
+                    // so push all parameters back to the configuration.  Values have
+                    // not changed during this, so existing values will remain the same.
                     StrVector propertyNames = core.getDevicePropertyNames(DEVICE_NAME);
                     for(String propertyName: propertyNames)
                     {

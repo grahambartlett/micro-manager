@@ -112,7 +112,7 @@ public class PureFocusFrame extends JFrame
 			{
 			}
  
-			val = core_.getProperty(plugin_.DEVICE_NAME, "Objective");
+			val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.OBJECTIVE);
             Integer intVal = Integer.parseInt(val);
             SpinnerModel numberModel = objectiveSelectSpinner_.getModel();
             numberModel.setValue(intVal);
@@ -170,7 +170,7 @@ public class PureFocusFrame extends JFrame
 		int newValue = (Integer)numberModel.getValue();
 		try
 		{
-			core_.setProperty(plugin_.DEVICE_NAME, "Objective", newValue);
+			core_.setProperty(plugin_.DEVICE_NAME, plugin_.OBJECTIVE, newValue);
 		}
 		catch (Exception ex)
 		{

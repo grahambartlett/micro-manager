@@ -315,6 +315,8 @@ public class PureFocusGlobalTableDialog extends JDialog implements ActionListene
                 
             core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
             
+            updateValues(true);
+            
             core.updateCoreProperties();
             core.updateSystemStateCache();
     	}
