@@ -88,6 +88,8 @@ public class PureFocusObjectiveSlotTableDialog extends JDialog implements Action
     private JTextField[] servoLimitMaximumPositive_;
     private JTextField[] servoLimitMaximumNegative_;
     
+    private Timer timer_;
+    
 
 	/** Creates new form PureFocusObjectiveSlotTableFrame
 	@param parent Base window
@@ -109,6 +111,11 @@ public class PureFocusObjectiveSlotTableDialog extends JDialog implements Action
                     getClass().getResource("/org/micromanager/icons/microscope.gif")));
         
 		updateValues(true);
+        
+        // Run timed updates of form
+        timer_ = new Timer(5000, this);
+        timer_.setInitialDelay(5000);
+        timer_.start();        
 	}
     
 
@@ -718,11 +725,22 @@ public class PureFocusObjectiveSlotTableDialog extends JDialog implements Action
         Object source = e.getSource();
         String propertyName = e.getActionCommand();
         
+        if (source.getClass() == Timer.class)
+        {
+            try
+            {
+                updateValues(false);
+            }
+            catch (Exception ex)
+            {
+                // Ignore exceptions during timed update
+            } 
+        }
 		try
 		{
             int slot = 0;
             core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
-            
+
             // Work out slot number from property name
             int slotStart = propertyName.indexOf(plugin_.OBJECTIVE_PREFIX);
             if (slotStart >= 0)
@@ -730,12 +748,12 @@ public class PureFocusObjectiveSlotTableDialog extends JDialog implements Action
                 int index = slotStart + plugin_.OBJECTIVE_PREFIX.length();
                 slot = Integer.valueOf(propertyName.substring(index, index + 1));
             }
-            
+
             if (source.getClass() == JTextField.class)
             {
                 JTextField widget = (JTextField)source;
                 String val = widget.getText();
-                
+
                 if ((widget == objectivePreset_[1]) ||
                     (widget == objectivePreset_[2]) ||
                     (widget == objectivePreset_[3]) ||
@@ -768,20 +786,20 @@ public class PureFocusObjectiveSlotTableDialog extends JDialog implements Action
             {
                 // Unknown so ignore it
             }
-                
+
             core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
-            
+
             if (slot != 0)
             {
                 // Update all settings for this slot
                 updateSlot(slot);
             }
-            
+
             // Update current settings
             updateSlot(0);
-            
+
             core.updateCoreProperties();
-            core.updateSystemStateCache();            
+            core.updateSystemStateCache();
     	}
 		catch (Exception ex)
 		{
