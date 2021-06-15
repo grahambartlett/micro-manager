@@ -19,6 +19,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.geom.Ellipse2D;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -33,6 +35,10 @@ import javax.swing.SpinnerModel;
 import javax.swing.Timer;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.JMenuBar;
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
+import javax.swing.JCheckBoxMenuItem;
 
 import mmcorej.CMMCore;
 import mmcorej.StrVector;
@@ -63,14 +69,20 @@ import org.micromanager.internal.utils.WindowPositioning;
  * @todo We need a menu or buttons to launch child dialogs.
  */
 @SuppressWarnings(value = {"serial", "static-access"})    
-public class PureFocusFrame extends JFrame implements ActionListener, ChangeListener
+public class PureFocusFrame extends JFrame implements ActionListener, ChangeListener, ItemListener
 {
 	private final Studio gui_;
 	private final CMMCore core_;
 	private final PureFocus plugin_;
     
-    private Timer timer_;
-    private Boolean errorShown_;
+    // Child dialogs
+    PureFocusObjectiveSlotTableDialog objectiveSlotTableDialog_;
+    PureFocusGlobalTableDialog globalTableDialog_;
+
+    // Menu elements
+    private JCheckBoxMenuItem showObjectiveSlotConfigTable_;
+    private JCheckBoxMenuItem showGlobalConfigTable_;
+    private JMenuItem about_;
     
 	// GUI elements
 	private JSpinner objectiveSelectSpinner_;
@@ -89,14 +101,12 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
     private JCheckBox isOffsetMoving_;
     private JCheckBox isFocusDriveMoving_;
     private JCheckBox positiveLimitSwitch_;    
-    private JCheckBox negativeLimitSwitch_;    
+    private JCheckBox negativeLimitSwitch_;  
     
-    
-    // Child dialogs
-    PureFocusObjectiveSlotTableDialog objectiveSlotTableDialog_;
-    PureFocusGlobalTableDialog globalTableDialog_;
+    // GUI handling
+    private Timer timer_;
+    private Boolean errorShown_;
 
-    
    
 	/** Creates new form PureFocusFrame
 	@param gui MM scriptInterface
@@ -115,79 +125,48 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
 
         super.setIconImage(Toolkit.getDefaultToolkit().getImage(
                     getClass().getResource("/org/micromanager/icons/microscope.gif")));
-
-        updateValues(true);
         
-        // Run timed updates of form
+        objectiveSlotTableDialog_ = new PureFocusObjectiveSlotTableDialog(this, plugin_, gui_);
+        objectiveSlotTableDialog_.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+        objectiveSlotTableDialog_.setVisible(false);      
+        objectiveSlotTableDialog_.addWindowListener(
+            new WindowAdapter()
+            {
+                @Override
+                public void windowClosing(WindowEvent windowEvent)
+                {
+                    showObjectiveSlotConfigTable_.setState(false);
+                    objectiveSlotTableDialog_.setVisible(false);
+                }
+            });
+
+        globalTableDialog_ = new PureFocusGlobalTableDialog(this, plugin_, gui_);
+        globalTableDialog_.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+        globalTableDialog_.setVisible(false);      
+        globalTableDialog_.addWindowListener(
+            new WindowAdapter()
+            {
+                @Override
+                public void windowClosing(WindowEvent windowEvent)
+                {
+                    showGlobalConfigTable_.setState(false);
+                    globalTableDialog_.setVisible(false);
+                }
+            });
+        
+        // Only display and update frame contents after everything else is ready
+		pack();
+        updateValues(true);
+
+        // Run timed updates of form.  This must be the last step after everything
+        // else is ready.
         timer_ = new Timer(2000, this);
         timer_.setInitialDelay(2000);
-        timer_.start(); 
-
-        objectiveSlotTableDialog_ = new PureFocusObjectiveSlotTableDialog(this, plugin_, gui_);
-        objectiveSlotTableDialog_.setVisible(true);
-        
-        globalTableDialog_ = new PureFocusGlobalTableDialog(this, plugin_, gui_);
-        globalTableDialog_.setVisible(true);        
+        timer_.start();         
 	}
 
 
-    private void updateValues(boolean allValues)
-	{
-        Boolean errored = false;
-        String errorMessage = "";
-        
-		try
-		{
-			String val;
- 
-            if (allValues)
-            {
-                val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.OBJECTIVE);
-                SpinnerModel numberModel = objectiveSelectSpinner_.getModel();
-                numberModel.setValue(Integer.parseInt(val));
-                
-                offsetPositionMicrons_.setText(core_.getProperty(plugin_.DEVICE_NAME, plugin_.OFFSET_POSITION_MICRONS));
-                focusPositionMicrons_.setText(core_.getProperty(plugin_.DEVICE_NAME, plugin_.FOCUS_POSITION_MICRONS));
-            }
-            
-            val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.CALCULATION_ABCD);
-            String tokens[] = val.split(",");
-            calculationA_.setText(tokens[0]);
-            calculationB_.setText(tokens[1]);
-            calculationC_.setText(tokens[2]);
-            calculationD_.setText(tokens[3]);
-            focusPidTarget_.setText(core_.getProperty(plugin_.DEVICE_NAME, plugin_.FOCUS_PID_TARGET));
-            focusPidPosition_.setText(core_.getProperty(plugin_.DEVICE_NAME, plugin_.FOCUS_PID_POSITION));
-            focusPidError_.setText(core_.getProperty(plugin_.DEVICE_NAME, plugin_.FOCUS_PID_ERROR));
-            focusPidOutput_.setText(core_.getProperty(plugin_.DEVICE_NAME, plugin_.FOCUS_PID_OUTPUT));
-            focusState_.setText(core_.getProperty(plugin_.DEVICE_NAME, plugin_.FOCUS_STATE));
-            timeToInFocus_.setText(core_.getProperty(plugin_.DEVICE_NAME, plugin_.TIME_TO_IN_FOCUS));
-            
-            isOffsetMoving_.setSelected(Long.valueOf(core_.getProperty(plugin_.DEVICE_NAME, plugin_.IS_OFFSET_MOVING)) != 0);
-            isFocusDriveMoving_.setSelected(Long.valueOf(core_.getProperty(plugin_.DEVICE_NAME, plugin_.IS_FOCUS_DRIVE_MOVING)) != 0);
-            positiveLimitSwitch_.setSelected(Long.valueOf(core_.getProperty(plugin_.DEVICE_NAME, plugin_.POSITIVE_LIMIT_SWITCH)) != 0);
-            negativeLimitSwitch_.setSelected(Long.valueOf(core_.getProperty(plugin_.DEVICE_NAME, plugin_.NEGATIVE_LIMIT_SWITCH)) != 0);
-		}
-		catch (Exception ex)
-		{
-            errored = true;
-            errorMessage = ex.getMessage();
-		}
-        
-        if (errored)
-        {
-            if (!errorShown_)
-            {
-                // Only show this once
-                gui_.logs().showError(errorMessage);
-            }
-        }
-        
-        errorShown_ = errored;
-	}
-
-
-	/** This method is called from within the constructor to initialize the form.
+    /** This method is called from within the constructor to initialize the form.
 	*/
 	@SuppressWarnings("unchecked")
 	// <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -207,6 +186,40 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
 			}
 		});
         
+        // Set up menus
+        JMenuBar menuBar;
+        JMenu menu;
+
+        menuBar = new JMenuBar();
+        
+        menu = new JMenu("Advanced");
+        menu.setMnemonic('A');
+        menuBar.add(menu);
+        
+        showObjectiveSlotConfigTable_ = new JCheckBoxMenuItem("Objective slot settings");
+        showObjectiveSlotConfigTable_.setMnemonic('O');
+        showObjectiveSlotConfigTable_.addItemListener(this);
+        showObjectiveSlotConfigTable_.setSelected(false);
+        menu.add(showObjectiveSlotConfigTable_);
+        
+        showGlobalConfigTable_ = new JCheckBoxMenuItem("Global settings");
+        showGlobalConfigTable_.setMnemonic('G');
+        showGlobalConfigTable_.addItemListener(this);
+        showGlobalConfigTable_.setSelected(false);
+        menu.add(showGlobalConfigTable_);
+        
+        menu = new JMenu("Help");
+        menu.setMnemonic('H');
+        menuBar.add(menu);
+        
+        about_ = new JMenuItem("About");
+        about_.setMnemonic('A');
+        about_.addActionListener(this);
+        menu.add(about_);       
+
+        setJMenuBar(menuBar);
+
+        // Set up form layout
         this.setLayout(new MigLayout("", ""));
 
 		objectiveSelectSpinner_ = new javax.swing.JSpinner();
@@ -326,12 +339,88 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
         
         this.add(new JLabel("Negative limit switch"), "align label");
         this.add(negativeLimitSwitch_, "wrap");      
-     
-		pack();
 	}
 
     
-    /** @return Name of currently-selected PureFocus */
+    private void updateValues(boolean allValues)
+	{
+        Boolean errored = false;
+        String errorMessage = "";
+        
+		try
+		{
+			String val;
+            
+            if (!objectiveSelectSpinner_.isFocusOwner())
+            {
+                val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.OBJECTIVE);
+                Integer deviceValue = Integer.parseInt(val);
+                
+                SpinnerModel numberModel = objectiveSelectSpinner_.getModel();
+                Integer formValue = (Integer)numberModel.getValue();
+                
+                if (!deviceValue.equals(formValue))
+                {
+                    // Update GUI for different values
+                    numberModel.setValue(deviceValue);
+                    
+                    if (objectiveSlotTableDialog_ != null)
+                    {
+                        objectiveSlotTableDialog_.updateValues(false, deviceValue);
+                    }
+                }
+            }
+            
+            if (!offsetPositionMicrons_.isFocusOwner())
+            {
+                val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.OFFSET_POSITION_MICRONS);
+                offsetPositionMicrons_.setText(val);
+            }
+            
+            if (!focusPositionMicrons_.isFocusOwner())
+            {
+                val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.FOCUS_POSITION_MICRONS);
+                focusPositionMicrons_.setText(val);
+            }
+            
+            val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.CALCULATION_ABCD);
+            String tokens[] = val.split(":");
+            calculationA_.setText(tokens[0]);
+            calculationB_.setText(tokens[1]);
+            calculationC_.setText(tokens[2]);
+            calculationD_.setText(tokens[3]);
+            focusPidTarget_.setText(core_.getProperty(plugin_.DEVICE_NAME, plugin_.FOCUS_PID_TARGET));
+            focusPidPosition_.setText(core_.getProperty(plugin_.DEVICE_NAME, plugin_.FOCUS_PID_POSITION));
+            focusPidError_.setText(core_.getProperty(plugin_.DEVICE_NAME, plugin_.FOCUS_PID_ERROR));
+            focusPidOutput_.setText(core_.getProperty(plugin_.DEVICE_NAME, plugin_.FOCUS_PID_OUTPUT));
+            focusState_.setText(core_.getProperty(plugin_.DEVICE_NAME, plugin_.FOCUS_STATE));
+            timeToInFocus_.setText(core_.getProperty(plugin_.DEVICE_NAME, plugin_.TIME_TO_IN_FOCUS));
+            
+            isOffsetMoving_.setSelected(Long.valueOf(core_.getProperty(plugin_.DEVICE_NAME, plugin_.IS_OFFSET_MOVING)) != 0);
+            isFocusDriveMoving_.setSelected(Long.valueOf(core_.getProperty(plugin_.DEVICE_NAME, plugin_.IS_FOCUS_DRIVE_MOVING)) != 0);
+            positiveLimitSwitch_.setSelected(Long.valueOf(core_.getProperty(plugin_.DEVICE_NAME, plugin_.POSITIVE_LIMIT_SWITCH)) != 0);
+            negativeLimitSwitch_.setSelected(Long.valueOf(core_.getProperty(plugin_.DEVICE_NAME, plugin_.NEGATIVE_LIMIT_SWITCH)) != 0);
+		}
+		catch (Exception ex)
+		{
+            errored = true;
+            errorMessage = ex.getMessage();
+		}
+        
+        if (errored)
+        {
+            if (!errorShown_)
+            {
+                // Only show this once
+                gui_.logs().showError(errorMessage);
+            }
+        }
+        
+        errorShown_ = errored;
+	}
+
+
+	/** @return Name of currently-selected PureFocus */
     public String getPureFocus()
     {
         return plugin_.DEVICE_NAME;
@@ -350,6 +439,9 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
 		try
 		{
 			core_.setProperty(plugin_.DEVICE_NAME, plugin_.OBJECTIVE, newValue);
+            
+            // After objective slot has changed, update settings for other dialogs
+            objectiveSlotTableDialog_.updateValues(false, newValue);        
 		}
 		catch (Exception ex)
 		{
@@ -380,9 +472,54 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
         {
             updateValues(false);
         }
+        else if (source.getClass() == JMenuItem.class)
+        {
+            if (source == about_)
+            {
+                JOptionPane.showMessageDialog(this,
+                    "Prior PureFocus PF-850 configuration plugin\n"
+                        + "Written by G Bartlett\n"
+                        + "(c) Prior Scientific Instruments Ltd., 2021\n"
+                        + "Distributed under the BSD license following Micro-Manager licensing\n\n"
+                        + "For support, please post your question on http://forum.image.sc in\n"
+                        + "category \"Development\", or email inquiries@prior.com",
+                    "About",
+                    JOptionPane.INFORMATION_MESSAGE);
+            }
+        }
         else
         {
             // Ignore
         }
     }    
+    
+    @Override
+    public void itemStateChanged(ItemEvent e)
+    {   
+        String pf = getPureFocus();         
+        Object source = e.getSource();        
+        
+        if (source.getClass() == JCheckBoxMenuItem.class)
+        {
+            JCheckBoxMenuItem item = (JCheckBoxMenuItem)source;
+            Boolean newState = item.isSelected();
+            
+            if (source == showObjectiveSlotConfigTable_)
+            {
+                objectiveSlotTableDialog_.setVisible(newState);
+            }
+            else if (source == showGlobalConfigTable_)
+            {
+                globalTableDialog_.setVisible(newState);
+            }
+            else
+            {
+                // Unknown
+            }     
+        }
+        else
+        {
+            // Ignore
+        }        
+    }
 }

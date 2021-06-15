@@ -269,6 +269,15 @@ public class PureFocus implements MenuPlugin, SciJavaPlugin
                 // Never fails
             }             
         }
+        else
+        {
+            // Close anything left open from previous run
+            if (myFrame_ != null)
+            {
+                myFrame_.dispose();
+                myFrame_ = null;
+            }
+        }
     }
    
 
