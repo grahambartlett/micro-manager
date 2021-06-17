@@ -100,7 +100,7 @@ public class PureFocusGlobalTableDialog extends JDialog implements ActionListene
                     getClass().getResource("/org/micromanager/icons/microscope.gif")));
         
         updateInProgress_ = false;
-		updateValues(true);
+		updateValues();
 	}
     
 
@@ -214,7 +214,7 @@ public class PureFocusGlobalTableDialog extends JDialog implements ActionListene
 	}
     
     
-    private void updateValues(boolean allValues)
+    public void updateValues()
 	{
         String pf = parent_.getPureFocus();
         CMMCore core = gui_.getCMMCore();
@@ -326,7 +326,7 @@ public class PureFocusGlobalTableDialog extends JDialog implements ActionListene
 
                 core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
 
-                updateValues(true);
+                updateValues();
 
                 core.updateCoreProperties();
                 core.updateSystemStateCache();

@@ -208,8 +208,6 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
 			@Override
 			public void windowClosing(WindowEvent e)
 			{			
-				plugin_.tellFrameClosed();
-				frame.setVisible(false);
 				frame.dispose();
 			}
 		});
@@ -344,7 +342,7 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
         this.add(new JLabel("Focus PID position"), "align label");
         this.add(focusPidPosition_, "wrap");
         
-         this.add(new JLabel("Focus PID error"), "align label");
+        this.add(new JLabel("Focus PID error"), "align label");
         this.add(focusPidError_, "wrap");
         
         this.add(new JLabel("Focus PID output"), "align label");
@@ -368,9 +366,27 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
         this.add(new JLabel("Negative limit switch"), "align label");
         this.add(negativeLimitSwitch_, "wrap");      
 	}
+    
+
+    @Override
+    public void dispose()
+    {
+        // The timer will be deleted automatically when the frame is collected,
+        // but in the meantime it will still be alive and still produce events
+        // on the closed window (and potentially without the device existing).
+        // We must stop the timer to prevent this happening.
+        timer_.stop();
+        
+        // Tell the plugin that it has no frame attached
+        plugin_.tellFrameClosed();
+        
+        // Close the window
+        setVisible(false);
+        super.dispose();
+    }
 
     
-    private void updateValues(boolean allValues)
+    public void updateValues(boolean allValues)
 	{
         Boolean errored = false;
         String errorMessage = "";
@@ -381,32 +397,35 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
         {
             String val;
 
+            val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.OBJECTIVE);
+            Integer objectiveSelected = Integer.parseInt(val);
+            
+            // Update objective setting if not being changed
             if (!objectiveSelectSpinner_.isFocusOwner())
             {
-                val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.OBJECTIVE);
-                Integer deviceValue = Integer.parseInt(val);
-
                 SpinnerModel numberModel = objectiveSelectSpinner_.getModel();
                 Integer formValue = (Integer)numberModel.getValue();
 
-                if (!deviceValue.equals(formValue))
+                if (!objectiveSelected.equals(formValue))
                 {
                     // Update GUI for different values
-                    numberModel.setValue(deviceValue);
+                    numberModel.setValue(objectiveSelected);
 
                     if (objectiveSlotTableDialog_ != null)
                     {
-                        objectiveSlotTableDialog_.updateValues(false, deviceValue);
+                        objectiveSlotTableDialog_.updateValues(false, objectiveSelected);
                     }
                 }
             }
 
+            // Update offset setting if not being changed
             if (!offsetPositionMicrons_.isFocusOwner())
             {
                 val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.OFFSET_POSITION_MICRONS);
                 offsetPositionMicrons_.setText(val);
             }
 
+            // Update focus setting if not being changed
             if (!focusPositionMicrons_.isFocusOwner())
             {
                 val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.FOCUS_POSITION_MICRONS);
@@ -430,6 +449,14 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
             isFocusDriveMoving_.setSelected(Long.valueOf(core_.getProperty(plugin_.DEVICE_NAME, plugin_.IS_FOCUS_DRIVE_MOVING)) != 0);
             positiveLimitSwitch_.setSelected(Long.valueOf(core_.getProperty(plugin_.DEVICE_NAME, plugin_.POSITIVE_LIMIT_SWITCH)) != 0);
             negativeLimitSwitch_.setSelected(Long.valueOf(core_.getProperty(plugin_.DEVICE_NAME, plugin_.NEGATIVE_LIMIT_SWITCH)) != 0);
+            
+            if (allValues)
+            {
+                // This is set when opening the plugin or when a new configuration
+                // file is loaded.  The child dialogs also need to be updated.
+                objectiveSlotTableDialog_.updateValues(true, objectiveSelected);
+                globalTableDialog_.updateValues();
+            }
         }
         catch (Exception ex)
         {
@@ -439,10 +466,24 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
 
         if (errored)
         {
-            if (!errorShown_)
+            if (!errorMessage.startsWith("No device with label"))
             {
-                // Only show this once
-                gui_.logs().showError(errorMessage);
+                // This happens if the plugin is open and the user opens the
+                // hardware configuration wizard.  We still want the plugin to
+                // stay open (at least unless the user removes the device from
+                // the configuration, which is handled separately), but at this
+                // point it doesn't have a device attached.  We must ignore
+                // these errors.
+                if (!errorShown_)
+                {
+                    // Only show an error once, otherwise we will get a popup
+                    // every timer update.  Subsequent errors will not be reported.
+                    // When we get a run through without an error (i.e. the fault
+                    // has gone away, perhaps by reconnecting the port) then
+                    // the flag is cleared and again we will report the next
+                    // error.
+                    gui_.logs().showError(errorMessage);
+                }
             }
         }
 
