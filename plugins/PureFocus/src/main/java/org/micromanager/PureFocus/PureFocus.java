@@ -113,7 +113,16 @@ public class PureFocus implements MenuPlugin, SciJavaPlugin
     public static final String IS_OFFSET_MOVING = "Status-IsOffsetMoving";
     public static final String IS_FOCUS_DRIVE_MOVING = "Status-IsFocusDriveMoving";
     public static final String POSITIVE_LIMIT_SWITCH = "Status-PositiveLimitSwitch";
-    public static final String NEGATIVE_LIMIT_SWITCH = "Status-NegativeLimitSwitch";    
+    public static final String NEGATIVE_LIMIT_SWITCH = "Status-NegativeLimitSwitch";  
+    
+    // Names of other properties
+    // NOTE: These must match the C++ device adapter property names
+    public static final String SERIAL_NUMBER = "SerialNumber";
+    public static final String FIRMWARE_BUILD_VERSION = "FirmwareBuildVersion";
+    public static final String FIRMWARE_BUILD_DATE_TIME = "FirmwareBuildDateTime";
+    public static final String ARRAY_READ_INDEX = "ArrayReadIndex";
+    public static final String OBJECTIVE_PRESET_NAMES = "ObjectivePresetNames";
+    
     
     @Override
     public void setContext(Studio app)

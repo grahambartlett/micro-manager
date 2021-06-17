@@ -11,6 +11,8 @@ Licensed under the BSD license.
 
 package org.micromanager.PureFocus;
 
+import java.util.Vector;
+
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Shape;
@@ -104,8 +106,14 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
     private JCheckBox negativeLimitSwitch_;  
     
     // GUI handling
-    private Timer timer_;
+    final private Timer timer_;
     private Boolean errorShown_;
+    
+    // Set true when reading values back, to block change events
+    boolean updateInProgress_;
+    
+    // List of objective preset names, for use by the whole GUI
+    final public Vector<String> objectivePresetNames;
 
    
 	/** Creates new form PureFocusFrame
@@ -120,7 +128,26 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
 
         errorShown_ = false;
         
-		// If we get here, we know we have a PureFocus connected
+        // Set up list of objective names available
+        objectivePresetNames = new Vector<>();
+        int i = 0;
+        Boolean haveName = true;
+        while (haveName)
+        {
+            try
+            {
+                core_.setProperty(plugin_.DEVICE_NAME, plugin_.ARRAY_READ_INDEX, i);
+                String newName = core_.getProperty(plugin_.DEVICE_NAME, plugin_.OBJECTIVE_PRESET_NAMES);
+                objectivePresetNames.add(newName);
+                i++;
+            }
+            catch (Exception ex)
+            {
+                haveName = false;
+            }
+        }
+        
+		// Set up main window
         initComponents();
 
         super.setIconImage(Toolkit.getDefaultToolkit().getImage(
@@ -155,6 +182,7 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
             });
         
         // Only display and update frame contents after everything else is ready
+        updateInProgress_ = false;
 		pack();
         updateValues(true);
 
@@ -347,42 +375,44 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
         Boolean errored = false;
         String errorMessage = "";
         
-		try
-		{
-			String val;
-            
+        updateInProgress_ = true;
+        
+        try
+        {
+            String val;
+
             if (!objectiveSelectSpinner_.isFocusOwner())
             {
                 val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.OBJECTIVE);
                 Integer deviceValue = Integer.parseInt(val);
-                
+
                 SpinnerModel numberModel = objectiveSelectSpinner_.getModel();
                 Integer formValue = (Integer)numberModel.getValue();
-                
+
                 if (!deviceValue.equals(formValue))
                 {
                     // Update GUI for different values
                     numberModel.setValue(deviceValue);
-                    
+
                     if (objectiveSlotTableDialog_ != null)
                     {
                         objectiveSlotTableDialog_.updateValues(false, deviceValue);
                     }
                 }
             }
-            
+
             if (!offsetPositionMicrons_.isFocusOwner())
             {
                 val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.OFFSET_POSITION_MICRONS);
                 offsetPositionMicrons_.setText(val);
             }
-            
+
             if (!focusPositionMicrons_.isFocusOwner())
             {
                 val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.FOCUS_POSITION_MICRONS);
                 focusPositionMicrons_.setText(val);
             }
-            
+
             val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.CALCULATION_ABCD);
             String tokens[] = val.split(":");
             calculationA_.setText(tokens[0]);
@@ -395,18 +425,18 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
             focusPidOutput_.setText(core_.getProperty(plugin_.DEVICE_NAME, plugin_.FOCUS_PID_OUTPUT));
             focusState_.setText(core_.getProperty(plugin_.DEVICE_NAME, plugin_.FOCUS_STATE));
             timeToInFocus_.setText(core_.getProperty(plugin_.DEVICE_NAME, plugin_.TIME_TO_IN_FOCUS));
-            
+
             isOffsetMoving_.setSelected(Long.valueOf(core_.getProperty(plugin_.DEVICE_NAME, plugin_.IS_OFFSET_MOVING)) != 0);
             isFocusDriveMoving_.setSelected(Long.valueOf(core_.getProperty(plugin_.DEVICE_NAME, plugin_.IS_FOCUS_DRIVE_MOVING)) != 0);
             positiveLimitSwitch_.setSelected(Long.valueOf(core_.getProperty(plugin_.DEVICE_NAME, plugin_.POSITIVE_LIMIT_SWITCH)) != 0);
             negativeLimitSwitch_.setSelected(Long.valueOf(core_.getProperty(plugin_.DEVICE_NAME, plugin_.NEGATIVE_LIMIT_SWITCH)) != 0);
-		}
-		catch (Exception ex)
-		{
+        }
+        catch (Exception ex)
+        {
             errored = true;
             errorMessage = ex.getMessage();
-		}
-        
+        }
+
         if (errored)
         {
             if (!errorShown_)
@@ -415,9 +445,11 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
                 gui_.logs().showError(errorMessage);
             }
         }
-        
+
         errorShown_ = errored;
-	}
+        
+        updateInProgress_ = false;
+    }
 
 
 	/** @return Name of currently-selected PureFocus */
@@ -433,20 +465,21 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
         String pf = getPureFocus();            
         Object source = e.getSource();
         
-		SpinnerModel numberModel = objectiveSelectSpinner_.getModel();
+        if (!updateInProgress_)
+        {           
+            try
+            {
+                int newValue = (Integer)objectiveSelectSpinner_.getModel().getValue();
+                core_.setProperty(plugin_.DEVICE_NAME, plugin_.OBJECTIVE, newValue);
 
-		int newValue = (Integer)numberModel.getValue();
-		try
-		{
-			core_.setProperty(plugin_.DEVICE_NAME, plugin_.OBJECTIVE, newValue);
-            
-            // After objective slot has changed, update settings for other dialogs
-            objectiveSlotTableDialog_.updateValues(false, newValue);        
-		}
-		catch (Exception ex)
-		{
-			gui_.logs().showError(ex.getMessage());
-		}        
+                // After objective slot has changed, update settings for other dialogs
+                objectiveSlotTableDialog_.updateValues(false, newValue);        
+            }
+            catch (Exception ex)
+            {
+                gui_.logs().showError(ex.getMessage());
+            }        
+        }
     } 
     
     @Override
@@ -455,43 +488,50 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
         String pf = getPureFocus();         
         Object source = e.getSource();
         String propertyName = e.getActionCommand();
-        
-        if (source.getClass() == JTextField.class)
-        {
-            try
-            {
-                JTextField widget = (JTextField)source;
-                core_.setProperty(pf, propertyName, Double.valueOf(widget.getText()));
-            }
-            catch (Exception ex)
-            {
-                gui_.logs().showError(ex.getMessage());
-            }       
-        }
-        else if (source.getClass() == Timer.class)
+
+        if (source.getClass() == Timer.class)
         {
             updateValues(false);
-        }
-        else if (source.getClass() == JMenuItem.class)
+        }     
+        else if (!updateInProgress_)
         {
-            if (source == about_)
+            if (source.getClass() == JTextField.class)
             {
-                JOptionPane.showMessageDialog(this,
-                    "Prior PureFocus PF-850 configuration plugin\n"
-                        + "Written by G Bartlett\n"
-                        + "(c) Prior Scientific Instruments Ltd., 2021\n"
-                        + "Distributed under the BSD license following Micro-Manager licensing\n\n"
-                        + "For support, please post your question on http://forum.image.sc in\n"
-                        + "category \"Development\", or email inquiries@prior.com",
-                    "About",
-                    JOptionPane.INFORMATION_MESSAGE);
+                try
+                {
+                    JTextField widget = (JTextField)source;
+                    core_.setProperty(pf, propertyName, Double.valueOf(widget.getText()));
+                }
+                catch (Exception ex)
+                {
+                    gui_.logs().showError(ex.getMessage());
+                }       
             }
-        }
+            else if (source.getClass() == JMenuItem.class)
+            {
+                if (source == about_)
+                {
+                    JOptionPane.showMessageDialog(this,
+                        "Prior PureFocus PF-850 configuration plugin\n"
+                            + "Written by G Bartlett\n"
+                            + "(c) Prior Scientific Instruments Ltd., 2021\n"
+                            + "Distributed under the BSD license following Micro-Manager licensing\n\n"
+                            + "For support, please post your question on http://forum.image.sc in\n"
+                            + "category \"Development\", or email inquiries@prior.com",
+                        "About",
+                        JOptionPane.INFORMATION_MESSAGE);
+                }
+            }
+            else
+            {
+                // Ignore
+            }
+        }    
         else
         {
-            // Ignore
+            // Ignore events during update
         }
-    }    
+    }
     
     @Override
     public void itemStateChanged(ItemEvent e)
@@ -499,27 +539,33 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
         String pf = getPureFocus();         
         Object source = e.getSource();        
         
-        if (source.getClass() == JCheckBoxMenuItem.class)
+        if (!updateInProgress_)
         {
-            JCheckBoxMenuItem item = (JCheckBoxMenuItem)source;
-            Boolean newState = item.isSelected();
-            
-            if (source == showObjectiveSlotConfigTable_)
+            if (source.getClass() == JCheckBoxMenuItem.class)
             {
-                objectiveSlotTableDialog_.setVisible(newState);
-            }
-            else if (source == showGlobalConfigTable_)
-            {
-                globalTableDialog_.setVisible(newState);
+                JCheckBoxMenuItem item = (JCheckBoxMenuItem)source;
+                Boolean newState = item.isSelected();
+
+                if (source == showObjectiveSlotConfigTable_)
+                {
+                    // Ensure dialog starts up with correct values and objective enabled.
+                    objectiveSlotTableDialog_.updateValues(false, 
+                        (Integer)objectiveSelectSpinner_.getModel().getValue());     
+                    objectiveSlotTableDialog_.setVisible(newState);
+                }
+                else if (source == showGlobalConfigTable_)
+                {
+                    globalTableDialog_.setVisible(newState);
+                }
+                else
+                {
+                    // Unknown
+                }     
             }
             else
             {
-                // Unknown
-            }     
+                // Ignore
+            }      
         }
-        else
-        {
-            // Ignore
-        }        
     }
 }

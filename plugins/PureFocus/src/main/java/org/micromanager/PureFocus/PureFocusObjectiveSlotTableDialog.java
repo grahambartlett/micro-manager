@@ -31,7 +31,7 @@ import javax.swing.JSpinner;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.SpinnerModel;
-import javax.swing.Timer;
+import javax.swing.JComboBox;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -62,7 +62,7 @@ public class PureFocusObjectiveSlotTableDialog extends JDialog implements Action
     private final Studio gui_;
 	
 	// GUI elements
-    private JTextField[] objectivePreset_;
+    private JComboBox[] objectivePreset_;
     private JTextField[][] lensOffset_;
     private JTextField[] kP_;
     private JTextField[] kI_;
@@ -88,7 +88,9 @@ public class PureFocusObjectiveSlotTableDialog extends JDialog implements Action
     private JTextField[] servoLimitMaximumPositive_;
     private JTextField[] servoLimitMaximumNegative_;
     
-
+    // Set true when reading values back, to block change events
+    boolean updateInProgress_;
+    
 	/** Creates new form PureFocusObjectiveSlotTableFrame
 	@param parent Base window
     @param plugin PureFocus plugin
@@ -108,6 +110,7 @@ public class PureFocusObjectiveSlotTableDialog extends JDialog implements Action
         super.setIconImage(Toolkit.getDefaultToolkit().getImage(
                     getClass().getResource("/org/micromanager/icons/microscope.gif")));
         
+        updateInProgress_ = false;
 		updateValues(true, 0);      
 	}
     
@@ -120,9 +123,9 @@ public class PureFocusObjectiveSlotTableDialog extends JDialog implements Action
         int i;
 
         this.setLayout(new MigLayout("", "", ""));
-
+        
         // Create arrays for widgets
-        objectivePreset_ = new javax.swing.JTextField[7];
+        objectivePreset_ = new javax.swing.JComboBox[7];
         lensOffset_ = new javax.swing.JTextField[7][5];
         kP_ = new javax.swing.JTextField[7];
         kI_ = new javax.swing.JTextField[7];
@@ -161,11 +164,12 @@ public class PureFocusObjectiveSlotTableDialog extends JDialog implements Action
                 prefix = plugin_.OBJECTIVE_PREFIX + Integer.toString(i) + "-"; 
             }
             
-            objectivePreset_[i] = new javax.swing.JTextField();
+            objectivePreset_[i] = new javax.swing.JComboBox(parent_.objectivePresetNames);         
             objectivePreset_[i].setPreferredSize(new java.awt.Dimension(100, 20));
             objectivePreset_[i].addActionListener(this);
             objectivePreset_[i].setActionCommand(prefix + plugin_.PRESET);
-            
+            objectivePreset_[i].setEnabled(true);
+
             int j;
             for (j = 0; j < 5; j++)
             {            
@@ -543,6 +547,8 @@ public class PureFocusObjectiveSlotTableDialog extends JDialog implements Action
         String val;
         int i, limit;
 
+        updateInProgress_ = true;
+        
         if (allValues)
         {
             for (i = 0; i <= 6; i++)
@@ -592,6 +598,8 @@ public class PureFocusObjectiveSlotTableDialog extends JDialog implements Action
             servoLimitMaximumPositive_[i].setEnabled(slotActive);
             servoLimitMaximumNegative_[i].setEnabled(slotActive);
         }            
+        
+        updateInProgress_ = false;
 	}
     
     
@@ -599,6 +607,9 @@ public class PureFocusObjectiveSlotTableDialog extends JDialog implements Action
 	{
         String pf = parent_.getPureFocus();
         CMMCore core = gui_.getCMMCore();
+        
+        boolean prevUpdateInProgress = updateInProgress_;
+        updateInProgress_ = true;
 
         try
 		{
@@ -637,7 +648,7 @@ public class PureFocusObjectiveSlotTableDialog extends JDialog implements Action
  
                 value = core.getProperty(pf, prefix + plugin_.PRESET);
                 core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.PRESET, value);
-                objectivePreset_[slot].setText(value);
+                objectivePreset_[slot].setSelectedItem(value);
                 
                 int i;
                 for (i = 0; i < 5; i ++)
@@ -744,6 +755,8 @@ public class PureFocusObjectiveSlotTableDialog extends JDialog implements Action
 		{
 			gui_.logs().showError(ex.getMessage());
 		}
+        
+        updateInProgress_ = prevUpdateInProgress;
 	}
     
     
@@ -755,107 +768,107 @@ public class PureFocusObjectiveSlotTableDialog extends JDialog implements Action
         Object source = e.getSource();
         String propertyName = e.getActionCommand();
         
-        try
+        if (!updateInProgress_)
         {
-            int slot = 0;
-            core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
-
-            // Work out slot number from property name
-            int slotStart = propertyName.indexOf(plugin_.OBJECTIVE_PREFIX);
-            if (slotStart >= 0)
-            {
-                int index = slotStart + plugin_.OBJECTIVE_PREFIX.length();
-                slot = Integer.valueOf(propertyName.substring(index, index + 1));
-            }
-
-            if (source.getClass() == JTextField.class)
-            {
-                JTextField widget = (JTextField)source;
-                String val = widget.getText();
-
-                if ((widget == objectivePreset_[1]) ||
-                    (widget == objectivePreset_[2]) ||
-                    (widget == objectivePreset_[3]) ||
-                    (widget == objectivePreset_[4]) ||
-                    (widget == objectivePreset_[5]) ||
-                    (widget == objectivePreset_[6]))
-                {
-                    // These take text values
-                    core.setProperty(pf, propertyName, val);
-                }
-                else
-                {
-                    Double value = Double.valueOf(val);
-                    core.setProperty(pf, propertyName, value);
-                }
-            }
-            else if (source.getClass() == JCheckBox.class)
-            {
-                JCheckBox widget = (JCheckBox)source;
-                if (widget.isSelected())
-                {
-                    core.setProperty(pf, propertyName, 1);
-                }
-                else
-                {
-                    core.setProperty(pf, propertyName, 0);                          
-                }            
-            }
-            else
-            {
-                // Unknown so ignore it
-            }
-
-            core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
-
-            if (slot != 0)
-            {
-                // Update all settings for this slot
-                updateSlot(slot);
-            }
-
-            // Update current settings
-            updateSlot(0);
-
-            core.updateCoreProperties();
-            core.updateSystemStateCache();
-        }
-        catch (Exception ex)
-        {
-            // All exceptions need the same basic response
             try
             {
-                // Ensure PureFocus is not left open for changes
-                core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                int slot = 0;
+                core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
 
-                // If something went wrong, update widget value
+                // Work out slot number from property name
+                int slotStart = propertyName.indexOf(plugin_.OBJECTIVE_PREFIX);
+                if (slotStart >= 0)
+                {
+                    int index = slotStart + plugin_.OBJECTIVE_PREFIX.length();
+                    slot = Integer.valueOf(propertyName.substring(index, index + 1));
+                }
+
                 if (source.getClass() == JTextField.class)
                 {
                     JTextField widget = (JTextField)source;
-                    widget.setText(core.getProperty(pf, propertyName));
+                    String val = widget.getText();
+                    Double value = Double.valueOf(val);
+                    core.setProperty(pf, propertyName, value);
+                }
+                else if (source.getClass() == JComboBox.class)
+                {
+                    JComboBox widget = (JComboBox)source;
+                    String val = (String)widget.getSelectedItem();               
+                    core.setProperty(pf, propertyName, val);
                 }
                 else if (source.getClass() == JCheckBox.class)
                 {
                     JCheckBox widget = (JCheckBox)source;
-                    widget.setSelected(Integer.valueOf(core.getProperty(pf, propertyName)) != 0);
+                    if (widget.isSelected())
+                    {
+                        core.setProperty(pf, propertyName, 1);
+                    }
+                    else
+                    {
+                        core.setProperty(pf, propertyName, 0);                          
+                    }            
                 }
                 else
                 {
                     // Unknown so ignore it
                 }
-            }
-            catch (Exception e2)
-            {
-                // These actions should not be able to fail
-            }
 
-            if (ex.getClass() == NumberFormatException.class)
-            {
-                gui_.logs().showError("Value is not a number");
+                core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+
+                if (slot != 0)
+                {
+                    // Update all settings for this slot
+                    updateSlot(slot);
+                }
+
+                // Update current settings
+                updateSlot(0);
+
+                core.updateCoreProperties();
+                core.updateSystemStateCache();
             }
-            else
+            catch (Exception ex)
             {
-                gui_.logs().showError(ex.getMessage());
+                // All exceptions need the same basic response
+                try
+                {
+                    // Ensure PureFocus is not left open for changes
+                    core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+
+                    // If something went wrong, update widget value
+                    if (source.getClass() == JTextField.class)
+                    {
+                        JTextField widget = (JTextField)source;
+                        widget.setText(core.getProperty(pf, propertyName));
+                    }
+                    else if (source.getClass() == JComboBox.class)
+                    {
+                        JComboBox widget = (JComboBox)source;
+                        widget.setSelectedItem(core.getProperty(pf, propertyName));
+                    }                    
+                    else if (source.getClass() == JCheckBox.class)
+                    {
+                        JCheckBox widget = (JCheckBox)source;
+                        widget.setSelected(Integer.valueOf(core.getProperty(pf, propertyName)) != 0);
+                    }
+                    else
+                    {
+                        // Unknown so ignore it
+                    }
+                }
+                catch (Exception e2)
+                {
+                    // These actions should not be able to fail
+                }
+
+                if (ex.getClass() == NumberFormatException.class)
+                {
+                    gui_.logs().showError("Value is not a number");
+                }
+                else
+                {
+                    gui_.logs().showError(ex.getMessage());
+                }
             }
         }
 	}

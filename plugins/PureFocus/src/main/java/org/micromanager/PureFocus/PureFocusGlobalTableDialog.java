@@ -75,6 +75,10 @@ public class PureFocusGlobalTableDialog extends JDialog implements ActionListene
     private JTextField digipotOffsetSpeedPercent_;
     private JTextField focusDriveRangeMicrons_;
     private JTextField inFocusRecoveryTimeMs_;
+    
+    // Set true when reading values back, to block change events
+    boolean updateInProgress_;
+    
 
 	/** Creates new form PureFocusGlobalTableFrame
 	@param parent Base window
@@ -95,6 +99,7 @@ public class PureFocusGlobalTableDialog extends JDialog implements ActionListene
         super.setIconImage(Toolkit.getDefaultToolkit().getImage(
                     getClass().getResource("/org/micromanager/icons/microscope.gif")));
         
+        updateInProgress_ = false;
 		updateValues(true);
 	}
     
@@ -213,6 +218,8 @@ public class PureFocusGlobalTableDialog extends JDialog implements ActionListene
 	{
         String pf = parent_.getPureFocus();
         CMMCore core = gui_.getCMMCore();
+        
+        updateInProgress_ = true;
 
         try
 		{
@@ -274,6 +281,8 @@ public class PureFocusGlobalTableDialog extends JDialog implements ActionListene
 		{
 			gui_.logs().showError(ex.getMessage());
 		}
+        
+        updateInProgress_ = false;
 	}
 
 				
@@ -285,77 +294,80 @@ public class PureFocusGlobalTableDialog extends JDialog implements ActionListene
         Object source = e.getSource();
         String propertyName = e.getActionCommand();
         
-		try
-		{
-            core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
-            
-            if (source.getClass() == JTextField.class)
-            {
-                JTextField widget = (JTextField)source;
-                String val = widget.getText();
-                Double value = Double.valueOf(val);
-                core.setProperty(pf, propertyName, value);                
-            }
-            else if (source.getClass() == JCheckBox.class)
-            {
-                JCheckBox widget = (JCheckBox)source;
-                if (widget.isSelected())
-                {
-                    core.setProperty(pf, propertyName, 1);
-                }
-                else
-                {
-                    core.setProperty(pf, propertyName, 0);                          
-                }
-            }
-            else
-            {
-                // Unknown so ignore it
-            }
-                
-            core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
-            
-            updateValues(true);
-            
-            core.updateCoreProperties();
-            core.updateSystemStateCache();
-    	}
-		catch (Exception ex)
-		{
-            // All exceptions need the same basic response
+        if (!updateInProgress_)
+        {
             try
             {
-                // Ensure PureFocus is not left open for changes
-                core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
-                
-                // If something went wrong, update widget value
+                core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
+
                 if (source.getClass() == JTextField.class)
                 {
                     JTextField widget = (JTextField)source;
-                    widget.setText(core.getProperty(pf, propertyName));
+                    String val = widget.getText();
+                    Double value = Double.valueOf(val);
+                    core.setProperty(pf, propertyName, value);                
                 }
                 else if (source.getClass() == JCheckBox.class)
                 {
                     JCheckBox widget = (JCheckBox)source;
-                    widget.setSelected(Integer.valueOf(core.getProperty(pf, propertyName)) != 0);
+                    if (widget.isSelected())
+                    {
+                        core.setProperty(pf, propertyName, 1);
+                    }
+                    else
+                    {
+                        core.setProperty(pf, propertyName, 0);                          
+                    }
                 }
                 else
                 {
                     // Unknown so ignore it
                 }
+
+                core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+
+                updateValues(true);
+
+                core.updateCoreProperties();
+                core.updateSystemStateCache();
             }
-            catch (Exception e2)
+            catch (Exception ex)
             {
-                // These actions should not be able to fail
-            }
-            
-            if (ex.getClass() == NumberFormatException.class)
-            {
-                gui_.logs().showError("Value is not a number");
-            }
-            else
-            {
-                gui_.logs().showError(ex.getMessage());
+                // All exceptions need the same basic response
+                try
+                {
+                    // Ensure PureFocus is not left open for changes
+                    core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+
+                    // If something went wrong, update widget value
+                    if (source.getClass() == JTextField.class)
+                    {
+                        JTextField widget = (JTextField)source;
+                        widget.setText(core.getProperty(pf, propertyName));
+                    }
+                    else if (source.getClass() == JCheckBox.class)
+                    {
+                        JCheckBox widget = (JCheckBox)source;
+                        widget.setSelected(Integer.valueOf(core.getProperty(pf, propertyName)) != 0);
+                    }
+                    else
+                    {
+                        // Unknown so ignore it
+                    }
+                }
+                catch (Exception e2)
+                {
+                    // These actions should not be able to fail
+                }
+
+                if (ex.getClass() == NumberFormatException.class)
+                {
+                    gui_.logs().showError("Value is not a number");
+                }
+                else
+                {
+                    gui_.logs().showError(ex.getMessage());
+                }
             }
         }
 	}
