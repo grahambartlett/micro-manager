@@ -557,7 +557,7 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
                             + "Written by G Bartlett\n"
                             + "(c) Prior Scientific Instruments Ltd., 2021\n"
                             + "Distributed under the BSD license following Micro-Manager licensing\n\n"
-                            + "For support, please post your question on http://forum.image.sc in\n"
+                            + "For support, please post questions on http://forum.image.sc in\n"
                             + "category \"Development\", or email inquiries@prior.com",
                         "About",
                         JOptionPane.INFORMATION_MESSAGE);
