@@ -34,6 +34,7 @@ import javax.swing.JSpinner;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.SpinnerModel;
+import javax.swing.JSlider;
 import javax.swing.Timer;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -73,8 +74,13 @@ import org.micromanager.internal.utils.WindowPositioning;
 @SuppressWarnings(value = {"serial", "static-access"})    
 public class PureFocusFrame extends JFrame implements ActionListener, ChangeListener, ItemListener
 {
-	private final Studio gui_;
+    /** Reference to the MM/ImageJ GUI */
+    private final Studio gui_;
+    
+    /** Reference to the MM core */
 	private final CMMCore core_;
+    
+    /** Reference to the plugin which owns this */
 	private final PureFocus plugin_;
     
     // Child dialogs
@@ -87,39 +93,73 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
     private JMenuItem about_;
     
 	// GUI elements
-	private JSpinner objectiveSelectSpinner_;
-    private JTextField offsetPositionMicrons_;
-    private JTextField focusPositionMicrons_; 
+    private JButton objective1_;
+    private JButton objective2_;
+    private JButton objective3_;
+    private JButton objective4_;
+    private JButton objective5_;
+    private JButton objective6_;
+    
+    private JCheckBox inFocus_;
+    private JCheckBox sampleDetected_;
+    private JCheckBox correctInterface_;
+    private JCheckBox servoInLimit_;
+    
+    private JButton servoOff_;
+    private JButton servoOn_;
+    
     private JTextField calculationA_;
     private JTextField calculationB_;
-    private JTextField calculationC_;
-    private JTextField calculationD_;
-    private JTextField focusPidTarget_;
-    private JTextField focusPidPosition_;
-    private JTextField focusPidError_;
-    private JTextField focusPidOutput_;
-    private JTextField focusState_;
-    private JTextField timeToInFocus_;
-    private JCheckBox isOffsetMoving_;
-    private JCheckBox isFocusDriveMoving_;
-    private JCheckBox positiveLimitSwitch_;    
-    private JCheckBox negativeLimitSwitch_;  
+    private JTextField calculationAPlusB_;
+    private JTextField calculationAMinusB_;
+    private JSlider errorSlider_;
+    private JTextField error_;
+    private JButton zeroTarget_;
+    private JButton setTarget_;
+    private JTextField target_;
     
-    // GUI handling
+    private JTextField zPosition_;
+    private JButton zeroZ_;
+    private JButton goHome_;
+    private JButton liftToLoad_;
+    private JTextField liftDistance_;
+    private JButton stepUp_;
+    private JButton stepDown_;
+    private JTextField stepSize_;
+    private JButton haltZ_;
+    
+    private JButton digipotFocus_;
+    private JButton digipotOffset_;
+    
+    private JTextField offsetDefault_;
+    private JTextField offsetCurrent_;
+    private JButton offsetStepUp_;
+    private JButton offsetStepDown_;
+    private JTextField offsetStepSize;
+    
+    /** Timer for periodic GUI updates */
     final private Timer timer_;
+    
+    /** Store whether we have shown an error from periodic GUI updates, so that
+     * we only show one error when (for example) comms goes down, and do not
+     * flood the user with popups.
+     */
     private Boolean errorShown_;
     
-    // Set true when reading values back, to block change events
+    /** Set true when reading values back, to block change events */
     boolean updateInProgress_;
     
-    // List of objective preset names, for use by the whole GUI
+    /** List of objective preset names, for use by the whole GUI.
+     * Note that this needs to be a Vector because Swing needs a Vector to
+     * initialise a JComboBox list.
+     */
     final public Vector<String> objectivePresetNames;
 
    
-	/** Creates new form PureFocusFrame
-	@param gui MM scriptInterface
-	@param plugin Holds on to parent plugin
-	*/
+	/** Creates form.  Instantiated when plugin is opened.
+	 * @param gui MM script interface
+	 * @param plugin Parent plugin
+	 */
 	public PureFocusFrame(Studio gui, PureFocus plugin) 
 	{
 		gui_ = gui;

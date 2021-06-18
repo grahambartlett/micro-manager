@@ -31,14 +31,18 @@ import mmcorej.DeviceType;
 @SuppressWarnings(value = {"serial", "static-access"})   
 public class PureFocus implements MenuPlugin, SciJavaPlugin
 {
+    /** Reference to the MM/ImageJ GUI */
+	private Studio gui_;
+    
+    /** Reference to the frame when the plugin is open, or null if not open */
+    private PureFocusFrame myFrame_;
+
+    // Menu item to add to MM plugins menu
     public static final String MENUNAME = "Prior PureFocus PF-850";
     public static final String TOOLTIPDESCRIPTION =
         "Control the Prior PureFocus PF-850 autofocus system";
 
-    private Studio gui_;
-    private PureFocusFrame myFrame_;
-    
-    // Common strings
+    // Configuration names
     public static final String DEVICE_NAME = "PureFocus850";
     public static final String CONFIG_GROUP = "PureFocus850Group";
     public static final String CONFIG_GROUP_PRESET = "PureFocus850Preset";

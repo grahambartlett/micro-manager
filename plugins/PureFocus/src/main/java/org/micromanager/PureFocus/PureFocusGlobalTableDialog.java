@@ -52,14 +52,20 @@ import org.micromanager.Studio;
 import org.micromanager.internal.utils.WindowPositioning;
 
 
-/** Micro-Manager plugin for control of the Prior PureFocus PF-850 autofocus 
+/** Child dialog for control of global settings.  This is mostly intended to
+ * get us started before completing the GUI, and for advanced users later.
  */
 @SuppressWarnings(value = {"serial", "static-access"})  
 public class PureFocusGlobalTableDialog extends JDialog implements ActionListener
 {
-    private final PureFocus plugin_;
+    /** Reference to the MM/ImageJ GUI */
+	private final Studio gui_;
+    
+    /** Reference to the plugin which owns this */
+	private final PureFocus plugin_;
+    
+    /** Reference to the frame which owns this */
 	private final PureFocusFrame parent_;
-    private final Studio gui_;
 	
 	// GUI elements
     private JCheckBox isPiezoMotor_;
@@ -76,15 +82,16 @@ public class PureFocusGlobalTableDialog extends JDialog implements ActionListene
     private JTextField focusDriveRangeMicrons_;
     private JTextField inFocusRecoveryTimeMs_;
     
-    // Set true when reading values back, to block change events
+    /** Set true when reading values back, to block change events */
     boolean updateInProgress_;
     
 
-	/** Creates new form PureFocusGlobalTableFrame
-	@param parent Base window
-    @param plugin PureFocus plugin
-	@param gui MM scriptInterface
-	*/
+	/** Create dialog.  This is always instantiated when the main window is
+     * created, and is shown or hidden as required.
+	 * @param parent Base window
+     * @param plugin PureFocus plugin
+	 * @param gui MM script interface
+   	 */
 	public PureFocusGlobalTableDialog(PureFocusFrame parent, PureFocus plugin, Studio gui)
 	{
         // We want this to be a modeless dialog, to work with the rest of the GUI
