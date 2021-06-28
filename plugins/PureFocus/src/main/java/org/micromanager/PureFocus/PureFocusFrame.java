@@ -17,6 +17,7 @@ import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Shape;
 import java.awt.Toolkit;
+import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
@@ -42,6 +43,19 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JPanel;
+import javax.swing.BorderFactory;
+import javax.swing.border.Border;
+import javax.swing.border.TitledBorder;
+import java.awt.GridLayout;
+import java.awt.GridBagLayout;
+import java.awt.GridBagConstraints;
+import javax.swing.GroupLayout;
+import java.awt.Dimension;
+import java.awt.Insets;
+import javax.swing.BoxLayout;
+import javax.swing.GroupLayout;
+import javax.swing.SwingConstants;
 
 import mmcorej.CMMCore;
 import mmcorej.StrVector;
@@ -66,10 +80,6 @@ import org.micromanager.internal.utils.WindowPositioning;
  * This is only instantiated by the plugin if a PureFocus PF-850 device exists.
  * The GUI can therefore assume that calls to the device adapter will work,
  * barring the normal errors of invalid values or loss of comms.
- * 
- * @todo Currently this is just a placeholder to get us started.
- * 
- * @todo We need a menu or buttons to launch child dialogs.
  */
 @SuppressWarnings(value = {"serial", "static-access"})    
 public class PureFocusFrame extends JFrame implements ActionListener, ChangeListener, ItemListener
@@ -135,7 +145,7 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
     private JTextField offsetCurrent_;
     private JButton offsetStepUp_;
     private JButton offsetStepDown_;
-    private JTextField offsetStepSize;
+    private JTextField offsetStepSize_;
     
     /** Timer for periodic GUI updates */
     final private Timer timer_;
@@ -147,13 +157,20 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
     private Boolean errorShown_;
     
     /** Set true when reading values back, to block change events */
-    boolean updateInProgress_;
+    private boolean updateInProgress_;
+    
+    /* States of system, so that the GUI can be updated on change */
+    private int objectiveSelected_;
+    
     
     /** List of objective preset names, for use by the whole GUI.
      * Note that this needs to be a Vector because Swing needs a Vector to
      * initialise a JComboBox list.
      */
     final public Vector<String> objectivePresetNames;
+    
+    /** Scaling from floating-point error value to slider position */
+    static private int ERROR_SLIDER_SCALING = 1000;
 
    
 	/** Creates form.  Instantiated when plugin is opened.
@@ -168,6 +185,9 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
 
         errorShown_ = false;
         
+        // Force update of objective selected, first time through
+        objectiveSelected_ = 0;
+        
         // Set up list of objective names available
         objectivePresetNames = new Vector<>();
         int i = 0;
@@ -176,7 +196,9 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
         {
             try
             {
+                core_.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
                 core_.setProperty(plugin_.DEVICE_NAME, plugin_.ARRAY_READ_INDEX, i);
+                core_.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
                 String newName = core_.getProperty(plugin_.DEVICE_NAME, plugin_.OBJECTIVE_PRESET_NAMES);
                 objectivePresetNames.add(newName);
                 i++;
@@ -285,127 +307,399 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
 
         setJMenuBar(menuBar);
 
-        // Set up form layout
-        this.setLayout(new MigLayout("", ""));
+        // Set up layout of panels
+        GroupLayout topLayout = new GroupLayout(this.getContentPane());
+        this.getContentPane().setLayout(topLayout);
+        
+        JPanel objectivesPanel, measurementPanel, flagsPanel, servoPanel, positionPanel, digipotPanel, offsetPanel;
+        objectivesPanel = new JPanel();
+        measurementPanel = new JPanel();
+        flagsPanel = new JPanel();
+        servoPanel = new JPanel();
+        positionPanel = new JPanel();
+        digipotPanel = new JPanel();
+        offsetPanel = new JPanel(); 
 
-		objectiveSelectSpinner_ = new javax.swing.JSpinner();
-		objectiveSelectSpinner_.setModel(new javax.swing.SpinnerNumberModel(1, 1, 6, 1));
-		objectiveSelectSpinner_.setPreferredSize(new java.awt.Dimension(100, 20));
-		objectiveSelectSpinner_.addChangeListener(this);
+        topLayout.setHorizontalGroup(
+            topLayout.createSequentialGroup()
+                .addGroup(topLayout.createParallelGroup(GroupLayout.Alignment.LEADING, true)
+                    .addComponent(objectivesPanel)
+                    .addComponent(flagsPanel)
+                    .addComponent(servoPanel))
+                .addGroup(topLayout.createParallelGroup(GroupLayout.Alignment.LEADING, true)
+                    .addComponent(measurementPanel)
+                    .addGroup(topLayout.createSequentialGroup()
+                        .addComponent(positionPanel)
+                        .addComponent(digipotPanel)
+                        .addComponent(offsetPanel))));
         
-        offsetPositionMicrons_ = new javax.swing.JTextField();
-        offsetPositionMicrons_.setPreferredSize(new java.awt.Dimension(100, 20));
-        offsetPositionMicrons_.addActionListener(this);   
-        offsetPositionMicrons_.setActionCommand(plugin_.OFFSET_POSITION_MICRONS);
+        topLayout.setVerticalGroup(
+            topLayout.createSequentialGroup()
+                .addGroup(topLayout.createParallelGroup(GroupLayout.Alignment.LEADING, true)
+                    .addComponent(objectivesPanel)
+                    .addComponent(measurementPanel))
+                .addGroup(topLayout.createParallelGroup(GroupLayout.Alignment.LEADING, true)
+                    .addGroup(topLayout.createSequentialGroup()
+                        .addComponent(flagsPanel)
+                        .addComponent(servoPanel))
+                    .addComponent(positionPanel)
+                    .addComponent(digipotPanel)
+                    .addComponent(offsetPanel)));
         
-        focusPositionMicrons_ = new javax.swing.JTextField();
-        focusPositionMicrons_.setPreferredSize(new java.awt.Dimension(100, 20));
-        focusPositionMicrons_.addActionListener(this);   
-        focusPositionMicrons_.setActionCommand(plugin_.FOCUS_POSITION_MICRONS);
+        // Objectives panel
+        objective1_ = new JButton("1:");
+        objective1_.setHorizontalAlignment(SwingConstants.LEFT);
+        objective1_.addActionListener(this);
+        objective1_.setMinimumSize(new Dimension(250,1));
         
-        calculationA_ = new javax.swing.JTextField();
-        calculationA_.setPreferredSize(new java.awt.Dimension(100, 20));
-        calculationA_.setEditable(false);       
+        objective2_ = new JButton("2:");
+        objective2_.setHorizontalAlignment(SwingConstants.LEFT);
+        objective2_.addActionListener(this);
+        objective2_.setMinimumSize(new Dimension(250,1));
         
-        calculationB_ = new javax.swing.JTextField();
-        calculationB_.setPreferredSize(new java.awt.Dimension(100, 20));
-        calculationB_.setEditable(false);       
+        objective3_ = new JButton("3:");
+        objective3_.setHorizontalAlignment(SwingConstants.LEFT);
+        objective3_.addActionListener(this);
+        objective3_.setMinimumSize(new Dimension(250,1));
         
-        calculationC_ = new javax.swing.JTextField();
-        calculationC_.setPreferredSize(new java.awt.Dimension(100, 20));
-        calculationC_.setEditable(false);       
+        objective4_ = new JButton("4:");
+        objective4_.setHorizontalAlignment(SwingConstants.LEFT);
+        objective4_.addActionListener(this);
+        objective4_.setMinimumSize(new Dimension(250,1));      
         
-        calculationD_ = new javax.swing.JTextField();
-        calculationD_.setPreferredSize(new java.awt.Dimension(100, 20));
-        calculationD_.setEditable(false);       
+        objective5_ = new JButton("5:");
+        objective5_.setHorizontalAlignment(SwingConstants.LEFT);
+        objective5_.addActionListener(this);
+        objective5_.setMinimumSize(new Dimension(250,1));
         
-        focusPidTarget_ = new javax.swing.JTextField();
-        focusPidTarget_.setPreferredSize(new java.awt.Dimension(100, 20));
-        focusPidTarget_.setEditable(false);               
+        objective6_ = new JButton("6:");
+        objective6_.setHorizontalAlignment(SwingConstants.LEFT);
+        objective6_.addActionListener(this);
+        objective6_.setMinimumSize(new Dimension(250,1));
+ 
+        objectivesPanel.setBorder(BorderFactory.createTitledBorder("Objectives"));        
+        GroupLayout objectivesPanelLayout = new GroupLayout(objectivesPanel);
+        objectivesPanel.setLayout(objectivesPanelLayout);
         
-        focusPidPosition_ = new javax.swing.JTextField();
-        focusPidPosition_.setPreferredSize(new java.awt.Dimension(100, 20));
-        focusPidPosition_.setEditable(false); 
+        objectivesPanelLayout.setHorizontalGroup(
+            objectivesPanelLayout.createParallelGroup(GroupLayout.Alignment.LEADING, true)
+                .addComponent(objective1_)
+                .addComponent(objective2_)
+                .addComponent(objective3_)
+                .addComponent(objective4_)
+                .addComponent(objective5_)
+                .addComponent(objective6_));
         
-        focusPidError_ = new javax.swing.JTextField();
-        focusPidError_.setPreferredSize(new java.awt.Dimension(100, 20));
-        focusPidError_.setEditable(false); 
+        objectivesPanelLayout.setVerticalGroup(
+            objectivesPanelLayout.createSequentialGroup()
+                .addComponent(objective1_)
+                .addComponent(objective2_)
+                .addComponent(objective3_)
+                .addComponent(objective4_)
+                .addComponent(objective5_)
+                .addComponent(objective6_));       
+     
+        // Flags panel
+        JLabel inFocusLabel = new JLabel("In focus?");
+        inFocus_ = new JCheckBox();
+        inFocus_.setEnabled(false);
         
-        focusPidOutput_ = new javax.swing.JTextField();
-        focusPidOutput_.setPreferredSize(new java.awt.Dimension(100, 20));
-        focusPidOutput_.setEditable(false); 
+        JLabel sampleDetectedLabel = new JLabel("Sample detected?");
+        sampleDetected_ = new JCheckBox();
+        sampleDetected_.setEnabled(false);
         
-        focusState_ = new javax.swing.JTextField();
-        focusState_.setPreferredSize(new java.awt.Dimension(100, 20));
-        focusState_.setEditable(false); 
+        JLabel correctInterfaceLabel = new JLabel("Correct interface?");
+        correctInterface_ = new JCheckBox();
+        correctInterface_.setEnabled(false);
         
-        timeToInFocus_ = new javax.swing.JTextField();
-        timeToInFocus_.setPreferredSize(new java.awt.Dimension(100, 20));
-        timeToInFocus_.setEditable(false); 
+        JLabel servoInLimitLabel = new JLabel("Servo in limit?");       
+        servoInLimit_ = new JCheckBox();
+        servoInLimit_.setEnabled(false);
+
+        flagsPanel.setBorder(BorderFactory.createTitledBorder("Flags"));        
+        GroupLayout flagsPanelLayout = new GroupLayout(flagsPanel);
+        flagsPanel.setLayout(flagsPanelLayout);
         
-        isOffsetMoving_ = new javax.swing.JCheckBox();
-        isOffsetMoving_.setEnabled(false); 
+        flagsPanelLayout.setHorizontalGroup(
+            flagsPanelLayout.createSequentialGroup()
+                .addGroup(flagsPanelLayout.createParallelGroup(GroupLayout.Alignment.LEADING, true)
+                    .addComponent(inFocusLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(sampleDetectedLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(correctInterfaceLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(servoInLimitLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGroup(flagsPanelLayout.createParallelGroup(GroupLayout.Alignment.LEADING, true)
+                    .addComponent(inFocus_, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(sampleDetected_, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(correctInterface_, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(servoInLimit_, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)));      
+
+        flagsPanelLayout.setVerticalGroup(
+            flagsPanelLayout.createSequentialGroup()
+                .addGroup(flagsPanelLayout.createParallelGroup(GroupLayout.Alignment.CENTER, true)
+                    .addComponent(inFocusLabel)
+                    .addComponent(inFocus_)) 
+                .addGroup(flagsPanelLayout.createParallelGroup(GroupLayout.Alignment.CENTER, true)
+                    .addComponent(sampleDetectedLabel)
+                    .addComponent(sampleDetected_)) 
+                .addGroup(flagsPanelLayout.createParallelGroup(GroupLayout.Alignment.CENTER, true)
+                    .addComponent(correctInterfaceLabel)
+                    .addComponent(correctInterface_)) 
+                .addGroup(flagsPanelLayout.createParallelGroup(GroupLayout.Alignment.CENTER, true)
+                    .addComponent(servoInLimitLabel)
+                    .addComponent(servoInLimit_)));
         
-        isFocusDriveMoving_ = new javax.swing.JCheckBox();
-        isFocusDriveMoving_.setEnabled(false); 
+        // Servo panel        
+        servoOff_ = new JButton("Servo off");
+        servoOff_.addActionListener(this);
         
-        positiveLimitSwitch_ = new javax.swing.JCheckBox();
-        positiveLimitSwitch_.setEnabled(false); 
+        servoOn_ = new JButton("Servo on");
+        servoOn_.addActionListener(this);
+
+        servoPanel.setBorder(BorderFactory.createTitledBorder("Servo"));
+        GroupLayout servoPanelLayout = new GroupLayout(servoPanel);
+        servoPanel.setLayout(servoPanelLayout);
         
-        negativeLimitSwitch_ = new javax.swing.JCheckBox();
-        negativeLimitSwitch_.setEnabled(false); 
+        servoPanelLayout.setHorizontalGroup(
+            servoPanelLayout.createSequentialGroup()
+                .addComponent(servoOff_, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(servoOn_, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE));      
+
+        servoPanelLayout.setVerticalGroup(
+            servoPanelLayout.createParallelGroup(GroupLayout.Alignment.CENTER, true)
+                .addComponent(servoOff_)
+                .addComponent(servoOn_));
         
-        this.add(new JLabel("Objective"), "align label");
-        this.add(objectiveSelectSpinner_, "wrap");
+        // Measurement panel
+        JLabel aLabel = new JLabel("A");       
+        calculationA_ = new JTextField();
+        calculationA_.setMinimumSize(new Dimension(75,1));
+        calculationA_.setEditable(false);
         
-        this.add(new JLabel("Offset position"), "align label");
-        this.add(offsetPositionMicrons_, "wrap");
+        JLabel bLabel = new JLabel("B");       
+        calculationB_ = new JTextField();
+        calculationB_.setMinimumSize(new Dimension(75,1));
+        calculationB_.setEditable(false);
         
-        this.add(new JLabel("Focus position"), "align label");
-        this.add(focusPositionMicrons_, "wrap");
+        JLabel aPlusBLabel = new JLabel("A + B");        
+        calculationAPlusB_ = new JTextField();
+        calculationAPlusB_.setMinimumSize(new Dimension(75,1));
+        calculationAPlusB_.setEditable(false);
         
-        this.add(new JLabel("Calculation A"), "align label");
-        this.add(calculationA_, "wrap");
+        JLabel aMinusBLabel = new JLabel("A - B");       
+        calculationAMinusB_ = new JTextField();
+        calculationAMinusB_.setMinimumSize(new Dimension(75,1));
+        calculationAMinusB_.setEditable(false);
         
-        this.add(new JLabel("Calculation B"), "align label");
-        this.add(calculationB_, "wrap");
+        JLabel errorLabel = new JLabel("Error");        
+        error_ = new JTextField();
+        error_.setMinimumSize(new Dimension(75,1));
+        error_.setEditable(false);      
+        errorSlider_ = new JSlider();
+        errorSlider_.setMinimumSize(new Dimension(150,1));
+        errorSlider_.setEnabled(false);
+        errorSlider_.setMinimum(-ERROR_SLIDER_SCALING);
+        errorSlider_.setMaximum(ERROR_SLIDER_SCALING);
         
-        this.add(new JLabel("Calculation C"), "align label");
-        this.add(calculationC_, "wrap");
+        JLabel targetLabel = new JLabel("Target");       
+        target_ = new JTextField();
+        target_.setMinimumSize(new Dimension(75,1));
+        target_.setEditable(false);
         
-        this.add(new JLabel("Calculation D"), "align label");
-        this.add(calculationD_, "wrap");
+        measurementPanel.setBorder(BorderFactory.createTitledBorder("Measurement"));
+        GroupLayout measurementPanelLayout = new GroupLayout(measurementPanel);
+        measurementPanel.setLayout(measurementPanelLayout);        
         
-        this.add(new JLabel("Focus PID target"), "align label");
-        this.add(focusPidTarget_, "wrap");
+        measurementPanelLayout.setHorizontalGroup(
+            measurementPanelLayout.createSequentialGroup()
+                .addGroup(measurementPanelLayout.createParallelGroup(GroupLayout.Alignment.LEADING, true)
+                    .addComponent(aLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(bLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(aPlusBLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(aMinusBLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)    
+                    .addComponent(errorLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(targetLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGroup(measurementPanelLayout.createParallelGroup(GroupLayout.Alignment.LEADING, true)
+                    .addComponent(calculationA_, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(calculationB_, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(calculationAPlusB_, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(calculationAMinusB_, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(error_, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(target_, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addComponent(errorSlider_, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE));
+            
+        measurementPanelLayout.setVerticalGroup(
+            measurementPanelLayout.createSequentialGroup()
+                .addGroup(measurementPanelLayout.createParallelGroup(GroupLayout.Alignment.CENTER, true)
+                    .addComponent(aLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                    .addComponent(calculationA_, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)) 
+                .addGroup(measurementPanelLayout.createParallelGroup(GroupLayout.Alignment.CENTER, true)
+                    .addComponent(bLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                    .addComponent(calculationB_, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)) 
+                .addGroup(measurementPanelLayout.createParallelGroup(GroupLayout.Alignment.CENTER, true)
+                    .addComponent(aPlusBLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                    .addComponent(calculationAPlusB_, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)) 
+                .addGroup(measurementPanelLayout.createParallelGroup(GroupLayout.Alignment.CENTER, true)
+                    .addComponent(aMinusBLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                    .addComponent(calculationAMinusB_, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)) 
+                .addGroup(measurementPanelLayout.createParallelGroup(GroupLayout.Alignment.CENTER, true)
+                    .addComponent(errorLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                    .addComponent(error_, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                    .addComponent(errorSlider_, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)) 
+                .addGroup(measurementPanelLayout.createParallelGroup(GroupLayout.Alignment.CENTER, true)
+                    .addComponent(targetLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                    .addComponent(target_, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)));       
         
-        this.add(new JLabel("Focus PID position"), "align label");
-        this.add(focusPidPosition_, "wrap");
+        // Position panel
+        zeroZ_ = new JButton("Zero Z");
+        zeroZ_.addActionListener(this);
+        zeroZ_.setMinimumSize(new Dimension(50,1));
+        JLabel zPositionLabel = new JLabel("Z position (microns)");        
+        zPosition_ = new JTextField();
+        zPosition_.setMinimumSize(new Dimension(75,1));  
         
-        this.add(new JLabel("Focus PID error"), "align label");
-        this.add(focusPidError_, "wrap");
+        goHome_ = new JButton("Go to home");
+        goHome_.addActionListener(this);
+        goHome_.setMinimumSize(new Dimension(50,1));
         
-        this.add(new JLabel("Focus PID output"), "align label");
-        this.add(focusPidOutput_, "wrap");
+        liftToLoad_ = new JButton("Lift to load");
+        liftToLoad_.addActionListener(this);
+        liftToLoad_.setMinimumSize(new Dimension(50,1));
+        JLabel liftDistanceLabel = new JLabel("Lift distance (microns)");        
+        liftDistance_ = new JTextField("100.0");
+        liftDistance_.addActionListener(this);
+        liftDistance_.setMinimumSize(new Dimension(75,1));    
         
-        this.add(new JLabel("Focus state"), "align label");
-        this.add(focusState_, "wrap");
+        stepUp_ = new JButton("Step up");
+        stepUp_.addActionListener(this);
+        stepUp_.setMinimumSize(new Dimension(50,1));
+        JLabel stepSizeLabel = new JLabel("Step size (microns)");       
+        stepSize_ = new JTextField();
+        stepSize_.addActionListener(this);
+        stepSize_.setMinimumSize(new Dimension(75,1));      
         
-        this.add(new JLabel("Time to in focus"), "align label");
-        this.add(timeToInFocus_, "wrap");
+        stepDown_ = new JButton("Step down");
+        stepDown_.addActionListener(this);
+        stepDown_.setMinimumSize(new Dimension(50,1));
         
-        this.add(new JLabel("Is offset moving"), "align label");
-        this.add(isOffsetMoving_, "wrap");
+        haltZ_ = new JButton("Halt");
+        haltZ_.addActionListener(this);
+        haltZ_.setMinimumSize(new Dimension(50,1));
+
+        positionPanel.setBorder(BorderFactory.createTitledBorder("Z position"));
+        GroupLayout positionPanelLayout = new GroupLayout(positionPanel);
+        positionPanel.setLayout(positionPanelLayout);        
         
-        this.add(new JLabel("Is focus drive moving"), "align label");
-        this.add(isFocusDriveMoving_, "wrap");       
+        positionPanelLayout.setHorizontalGroup(
+            positionPanelLayout.createSequentialGroup()
+                .addGroup(positionPanelLayout.createParallelGroup(GroupLayout.Alignment.LEADING, true)
+                    .addComponent(zeroZ_, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(goHome_, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(liftToLoad_, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(stepUp_, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)    
+                    .addComponent(stepDown_, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE) 
+                    .addComponent(haltZ_, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGroup(positionPanelLayout.createParallelGroup(GroupLayout.Alignment.LEADING, true)
+                    .addComponent(zPositionLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(liftDistanceLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(stepSizeLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGroup(positionPanelLayout.createParallelGroup(GroupLayout.Alignment.LEADING, true)
+                    .addComponent(zPosition_, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(liftDistance_, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(stepSize_, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)));
+            
+        positionPanelLayout.setVerticalGroup(
+            positionPanelLayout.createSequentialGroup()
+                .addGroup(positionPanelLayout.createParallelGroup(GroupLayout.Alignment.CENTER, true)
+                    .addComponent(zeroZ_, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                    .addComponent(zPositionLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                    .addComponent(zPosition_, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)) 
+                .addComponent(goHome_, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                .addGroup(positionPanelLayout.createParallelGroup(GroupLayout.Alignment.CENTER, true)
+                    .addComponent(liftToLoad_, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                    .addComponent(liftDistanceLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                    .addComponent(liftDistance_, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)) 
+                .addGroup(positionPanelLayout.createParallelGroup(GroupLayout.Alignment.CENTER, true)
+                    .addComponent(stepUp_, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                    .addComponent(stepSizeLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                    .addComponent(stepSize_, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)) 
+                .addComponent(stepDown_, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                .addComponent(haltZ_, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE));
         
-        this.add(new JLabel("Positive limit switch"), "align label");
-        this.add(positiveLimitSwitch_, "wrap");
+        // Digipot panel
+        digipotFocus_ = new JButton("Digipot focus");
+        digipotFocus_.addActionListener(this);
+        digipotFocus_.setMinimumSize(new Dimension(50,1));
+
+        digipotOffset_ = new JButton("Digipot offset");
+        digipotOffset_.addActionListener(this);
+        digipotOffset_.setMinimumSize(new Dimension(50,1));
         
-        this.add(new JLabel("Negative limit switch"), "align label");
-        this.add(negativeLimitSwitch_, "wrap");      
-	}
+        digipotPanel.setBorder(BorderFactory.createTitledBorder("Digipot"));
+        GroupLayout digipotPanelLayout = new GroupLayout(digipotPanel);
+        digipotPanel.setLayout(digipotPanelLayout);        
+        
+        digipotPanelLayout.setHorizontalGroup(
+            digipotPanelLayout.createParallelGroup(GroupLayout.Alignment.LEADING, true) 
+                .addComponent(digipotFocus_, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE) 
+                .addComponent(digipotOffset_, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE));
+            
+        digipotPanelLayout.setVerticalGroup(
+            digipotPanelLayout.createSequentialGroup()
+                .addComponent(digipotFocus_, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                .addComponent(digipotOffset_, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE));
+        
+        // Offset panel
+        JLabel offsetDefaultLabel = new JLabel("Default offset (microns)");
+        offsetDefault_ = new JTextField();
+        offsetDefault_.setMinimumSize(new Dimension(75,1));
+        
+        offsetStepUp_ = new JButton("Step up");
+        offsetStepUp_.addActionListener(this);
+        offsetStepUp_.setMinimumSize(new Dimension(50,1));
+        JLabel offsetCurrentLabel = new JLabel("Current offset (microns)");
+        offsetCurrent_ = new JTextField();
+        offsetCurrent_.setMinimumSize(new Dimension(75,1));
+
+        offsetStepDown_ = new JButton("Step down");
+        offsetStepDown_.addActionListener(this);
+        offsetStepDown_.setMinimumSize(new Dimension(50,1));
+        JLabel offsetStepSize_Label = new JLabel("Step (microns)");       
+        offsetStepSize_ = new JTextField();
+        offsetStepSize_.addActionListener(this);
+        offsetStepSize_.setMinimumSize(new Dimension(75,1));
+        
+        offsetPanel.setBorder(BorderFactory.createTitledBorder("Offset"));
+        GroupLayout offsetPanelLayout = new GroupLayout(offsetPanel);
+        offsetPanel.setLayout(offsetPanelLayout);        
+        
+        offsetPanelLayout.setHorizontalGroup(
+            offsetPanelLayout.createSequentialGroup()
+                .addGroup(offsetPanelLayout.createParallelGroup(GroupLayout.Alignment.LEADING, true)
+                    .addComponent(offsetStepUp_, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(offsetStepDown_, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGroup(offsetPanelLayout.createParallelGroup(GroupLayout.Alignment.LEADING, true)
+                    .addComponent(offsetDefaultLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(offsetCurrentLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(offsetStepSize_Label, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGroup(offsetPanelLayout.createParallelGroup(GroupLayout.Alignment.LEADING, true)
+                    .addComponent(offsetDefault_, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(offsetCurrent_, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(offsetStepSize_, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)));
+            
+        offsetPanelLayout.setVerticalGroup(
+            offsetPanelLayout.createSequentialGroup()
+                .addGroup(offsetPanelLayout.createParallelGroup(GroupLayout.Alignment.CENTER, true)
+                    .addComponent(offsetDefaultLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                    .addComponent(offsetDefault_, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)) 
+                .addGroup(offsetPanelLayout.createParallelGroup(GroupLayout.Alignment.CENTER, true)
+                    .addComponent(offsetStepUp_, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                    .addComponent(offsetCurrentLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                    .addComponent(offsetCurrent_, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)) 
+                .addGroup(offsetPanelLayout.createParallelGroup(GroupLayout.Alignment.CENTER, true)
+                    .addComponent(offsetStepDown_, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                    .addComponent(offsetStepSize_Label, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                    .addComponent(offsetStepSize_, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)));     
+    }
     
 
     @Override
@@ -436,65 +730,261 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
         try
         {
             String val;
+            int valueInt;
 
-            val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.OBJECTIVE);
-            Integer objectiveSelected = Integer.parseInt(val);
-            
-            // Update objective setting if not being changed
-            if (!objectiveSelectSpinner_.isFocusOwner())
+            // Objective panel
+            if (allValues)
             {
-                SpinnerModel numberModel = objectiveSelectSpinner_.getModel();
-                Integer formValue = (Integer)numberModel.getValue();
-
-                if (!objectiveSelected.equals(formValue))
+                val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.OBJECTIVE_PREFIX + "1-" + plugin_.PRESET);
+                objective1_.setText("1: " + val);
+                val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.OBJECTIVE_PREFIX + "2-" + plugin_.PRESET);
+                objective2_.setText("2: " + val);
+                val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.OBJECTIVE_PREFIX + "3-" + plugin_.PRESET);
+                objective3_.setText("3: " + val);  
+                val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.OBJECTIVE_PREFIX + "4-" + plugin_.PRESET);
+                objective4_.setText("4: " + val);
+                val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.OBJECTIVE_PREFIX + "5-" + plugin_.PRESET);
+                objective5_.setText("5: " + val);  
+                val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.OBJECTIVE_PREFIX + "6-" + plugin_.PRESET);
+                objective6_.setText("6: " + val);
+                
+                val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.LIFT_TO_LOAD_DISTANCE_MICRONS);
+                liftDistance_.setText(val);
+                val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.FOCUS_POSITION_STEP_MICRONS);
+                stepSize_.setText(val);
+                val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.OFFSET_POSITION_STEP_MICRONS);
+                offsetStepSize_.setText(val);                              
+            }          
+            
+            val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.OBJECTIVE);
+            valueInt = Integer.parseInt(val);
+            boolean objectiveChanged = false;
+            if (objectiveSelected_ != valueInt)
+            {
+                // Update objective selected
+                objectiveSelected_ = valueInt;
+                objectiveChanged = true;
+            
+                switch (objectiveSelected_)
                 {
-                    // Update GUI for different values
-                    numberModel.setValue(objectiveSelected);
-
-                    if (objectiveSlotTableDialog_ != null)
-                    {
-                        objectiveSlotTableDialog_.updateValues(false, objectiveSelected);
-                    }
+                    case 1:
+                        objective1_.setEnabled(false);
+                        objective1_.setSelected(true);
+                        objective2_.setEnabled(true);
+                        objective2_.setSelected(false);                        
+                        objective3_.setEnabled(true);
+                        objective3_.setSelected(false);  
+                        objective4_.setEnabled(true);
+                        objective4_.setSelected(false);  
+                        objective5_.setEnabled(true);
+                        objective5_.setSelected(false);  
+                        objective6_.setEnabled(true);
+                        objective6_.setSelected(false);                          
+                        break;
+                    case 2:
+                        objective1_.setEnabled(true);
+                        objective1_.setSelected(false);
+                        objective2_.setEnabled(false);
+                        objective2_.setSelected(true);                        
+                        objective3_.setEnabled(true);
+                        objective3_.setSelected(false);  
+                        objective4_.setEnabled(true);
+                        objective4_.setSelected(false);  
+                        objective5_.setEnabled(true);
+                        objective5_.setSelected(false);  
+                        objective6_.setEnabled(true);
+                        objective6_.setSelected(false);                          
+                        break;
+                    case 3:
+                        objective1_.setEnabled(true);
+                        objective1_.setSelected(false);
+                        objective2_.setEnabled(true);
+                        objective2_.setSelected(false);                        
+                        objective3_.setEnabled(false);
+                        objective3_.setSelected(true);  
+                        objective4_.setEnabled(true);
+                        objective4_.setSelected(false);  
+                        objective5_.setEnabled(true);
+                        objective5_.setSelected(false);  
+                        objective6_.setEnabled(true);
+                        objective6_.setSelected(false);                          
+                        break;
+                    case 4:
+                        objective1_.setEnabled(true);
+                        objective1_.setSelected(false);
+                        objective2_.setEnabled(true);
+                        objective2_.setSelected(false);                        
+                        objective3_.setEnabled(true);
+                        objective3_.setSelected(false);  
+                        objective4_.setEnabled(false);
+                        objective4_.setSelected(true);  
+                        objective5_.setEnabled(true);
+                        objective5_.setSelected(false);  
+                        objective6_.setEnabled(true);
+                        objective6_.setSelected(false);                          
+                        break;
+                    case 5:
+                        objective1_.setEnabled(true);
+                        objective1_.setSelected(false);
+                        objective2_.setEnabled(true);
+                        objective2_.setSelected(false);                        
+                        objective3_.setEnabled(true);
+                        objective3_.setSelected(false);  
+                        objective4_.setEnabled(true);
+                        objective4_.setSelected(false);  
+                        objective5_.setEnabled(false);
+                        objective5_.setSelected(true);  
+                        objective6_.setEnabled(true);
+                        objective6_.setSelected(false);                          
+                        break;
+                    case 6:
+                        objective1_.setEnabled(true);
+                        objective1_.setSelected(false);
+                        objective2_.setEnabled(true);
+                        objective2_.setSelected(false);                        
+                        objective3_.setEnabled(true);
+                        objective3_.setSelected(false);  
+                        objective4_.setEnabled(true);
+                        objective4_.setSelected(false);  
+                        objective5_.setEnabled(true);
+                        objective5_.setSelected(false);  
+                        objective6_.setEnabled(false);
+                        objective6_.setSelected(true);                          
+                        break;                        
+                    default:
+                        objective1_.setEnabled(false);
+                        objective1_.setSelected(false);
+                        objective2_.setEnabled(false);
+                        objective2_.setSelected(false);                        
+                        objective3_.setEnabled(false);
+                        objective3_.setSelected(false);  
+                        objective4_.setEnabled(false);
+                        objective4_.setSelected(false);  
+                        objective5_.setEnabled(false);
+                        objective5_.setSelected(false);  
+                        objective6_.setEnabled(false);
+                        objective6_.setSelected(false);                          
+                        break;
                 }
             }
-
-            // Update offset setting if not being changed
-            if (!offsetPositionMicrons_.isFocusOwner())
-            {
-                val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.OFFSET_POSITION_MICRONS);
-                offsetPositionMicrons_.setText(val);
-            }
-
-            // Update focus setting if not being changed
-            if (!focusPositionMicrons_.isFocusOwner())
-            {
-                val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.FOCUS_POSITION_MICRONS);
-                focusPositionMicrons_.setText(val);
-            }
-
-            val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.CALCULATION_ABCD);
-            String tokens[] = val.split(":");
-            calculationA_.setText(tokens[0]);
-            calculationB_.setText(tokens[1]);
-            calculationC_.setText(tokens[2]);
-            calculationD_.setText(tokens[3]);
-            focusPidTarget_.setText(core_.getProperty(plugin_.DEVICE_NAME, plugin_.FOCUS_PID_TARGET));
-            focusPidPosition_.setText(core_.getProperty(plugin_.DEVICE_NAME, plugin_.FOCUS_PID_POSITION));
-            focusPidError_.setText(core_.getProperty(plugin_.DEVICE_NAME, plugin_.FOCUS_PID_ERROR));
-            focusPidOutput_.setText(core_.getProperty(plugin_.DEVICE_NAME, plugin_.FOCUS_PID_OUTPUT));
-            focusState_.setText(core_.getProperty(plugin_.DEVICE_NAME, plugin_.FOCUS_STATE));
-            timeToInFocus_.setText(core_.getProperty(plugin_.DEVICE_NAME, plugin_.TIME_TO_IN_FOCUS));
-
-            isOffsetMoving_.setSelected(Long.valueOf(core_.getProperty(plugin_.DEVICE_NAME, plugin_.IS_OFFSET_MOVING)) != 0);
-            isFocusDriveMoving_.setSelected(Long.valueOf(core_.getProperty(plugin_.DEVICE_NAME, plugin_.IS_FOCUS_DRIVE_MOVING)) != 0);
-            positiveLimitSwitch_.setSelected(Long.valueOf(core_.getProperty(plugin_.DEVICE_NAME, plugin_.POSITIVE_LIMIT_SWITCH)) != 0);
-            negativeLimitSwitch_.setSelected(Long.valueOf(core_.getProperty(plugin_.DEVICE_NAME, plugin_.NEGATIVE_LIMIT_SWITCH)) != 0);
             
-            if (allValues)
+            // Flags panel
+            val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.FOCUS_STATE);
+            valueInt = Integer.parseInt(val);
+            if (allValues || ((valueInt != 0) != inFocus_.isSelected()))
+            {
+                inFocus_.setSelected((valueInt != 0));
+            }
+            
+            val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.IS_SAMPLE_PRESENT);
+            valueInt = Integer.parseInt(val);
+            if (allValues || ((valueInt != 0) != servoInLimit_.isSelected()))
+            {
+                sampleDetected_.setSelected((valueInt != 0));
+            }              
+            
+            val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.IS_INTERFACE_CORRECT);
+            valueInt = Integer.parseInt(val);
+            if (allValues || ((valueInt != 0) != servoInLimit_.isSelected()))
+            {
+                correctInterface_.setSelected((valueInt != 0));
+            }                
+
+            val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.SERVO_IN_LIMIT);
+            valueInt = Integer.parseInt(val);
+            if (allValues || ((valueInt != 0) != servoInLimit_.isSelected()))
+            {
+                servoInLimit_.setSelected((valueInt != 0));
+            }            
+            
+            // Servo panel
+            val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.SERVO_ON);
+            valueInt = Integer.parseInt(val);
+            if (allValues || ((valueInt != 0) != servoOn_.isSelected()))
+            {
+                if (valueInt != 0)
+                {
+                    servoOn_.setEnabled(false);
+                    servoOn_.setSelected(true); 
+                    servoOff_.setEnabled(true);
+                    servoOff_.setSelected(false);                 
+                }
+                else
+                {
+                    servoOn_.setEnabled(true);
+                    servoOn_.setSelected(false); 
+                    servoOff_.setEnabled(false);
+                    servoOff_.setSelected(true);
+                }
+            }
+            
+            // Measurement panel
+            val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.CALCULATION_ABCD);
+            String[] splitValues = val.split(":");
+            double calculationA = Double.valueOf(splitValues[0]);
+            double calculationB = Double.valueOf(splitValues[1]);
+            calculationA_.setText(Double.toString(calculationA));
+            calculationB_.setText(Double.toString(calculationB));
+            calculationAPlusB_.setText(Double.toString(calculationA + calculationB));
+            calculationAMinusB_.setText(Double.toString(calculationA - calculationB));
+            
+            val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.FOCUS_PID_ERROR);
+            error_.setText(val);
+            double error = Double.valueOf(val);
+            if (error < -1.0)
+            {
+                errorSlider_.setValue(-ERROR_SLIDER_SCALING);
+            }
+            else if (error > 1.0)
+            {
+                errorSlider_.setValue(ERROR_SLIDER_SCALING);
+            }
+            else
+            {
+                errorSlider_.setValue((int)(error * (double)ERROR_SLIDER_SCALING));
+            }
+           
+            val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.FOCUS_PID_TARGET);
+            target_.setText(val);
+            
+            // Position panel
+            val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.FOCUS_POSITION_MICRONS);
+            zPosition_.setText(val);
+            
+            // Digipot panel
+            val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.DIGIPOT_CONTROLS_OFFSET);
+            valueInt = Integer.parseInt(val);
+            if (allValues || ((valueInt != 0) != digipotOffset_.isSelected()))
+            {
+                if (valueInt != 0)
+                {
+                    digipotOffset_.setEnabled(false);
+                    digipotOffset_.setSelected(true); 
+                    digipotFocus_.setEnabled(true);
+                    digipotFocus_.setSelected(false);                 
+                }
+                else
+                {
+                    digipotOffset_.setEnabled(true);
+                    digipotOffset_.setSelected(false); 
+                    digipotFocus_.setEnabled(false);
+                    digipotFocus_.setSelected(true);
+                }
+            }
+            
+            // Offset panel
+            val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.OBJECTIVE_PREFIX + Integer.toString(objectiveSelected_) + "-" + plugin_.LENS_OFFSET + "0");
+            offsetDefault_.setText(val);
+            
+            val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.OFFSET_POSITION_MICRONS);
+            offsetCurrent_.setText(val);           
+
+            if (allValues || objectiveChanged)
             {
                 // This is set when opening the plugin or when a new configuration
                 // file is loaded.  The child dialogs also need to be updated.
-                objectiveSlotTableDialog_.updateValues(true, objectiveSelected);
+                // We also want to refresh values when the objective changes
+                objectiveSlotTableDialog_.updateValues(allValues, objectiveSelected_);
                 globalTableDialog_.updateValues();
             }
         }
@@ -548,13 +1038,10 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
         
         if (!updateInProgress_)
         {           
+            // Ignore events during update
             try
             {
-                int newValue = (Integer)objectiveSelectSpinner_.getModel().getValue();
-                core_.setProperty(plugin_.DEVICE_NAME, plugin_.OBJECTIVE, newValue);
-
-                // After objective slot has changed, update settings for other dialogs
-                objectiveSlotTableDialog_.updateValues(false, newValue);        
+    
             }
             catch (Exception ex)
             {
@@ -570,18 +1057,177 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
         Object source = e.getSource();
         String propertyName = e.getActionCommand();
 
-        if (source.getClass() == Timer.class)
+        if (updateInProgress_)
+        {
+            // Ignore events during update
+        }
+        else if (source.getClass() == Timer.class)
         {
             updateValues(false);
         }     
-        else if (!updateInProgress_)
+        else
         {
-            if (source.getClass() == JTextField.class)
+            if (source.getClass() == JButton.class)
             {
                 try
                 {
-                    JTextField widget = (JTextField)source;
-                    core_.setProperty(pf, propertyName, Double.valueOf(widget.getText()));
+                    if (source == objective1_)
+                    {
+                        // The call to updateValues() will update the objective
+                        // buttons and dialogs for this change
+                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        core_.setProperty(pf, plugin_.OBJECTIVE, 1);
+                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                    }
+                    else if (source == objective2_)
+                    {
+                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        core_.setProperty(pf, plugin_.OBJECTIVE, 2);
+                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                    }
+                    else if (source == objective3_)
+                    {
+                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        core_.setProperty(pf, plugin_.OBJECTIVE, 3);
+                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                    }
+                    else if (source == objective4_)
+                    {
+                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        core_.setProperty(pf, plugin_.OBJECTIVE, 4);
+                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                    }
+                    else if (source == objective5_)
+                    {
+                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        core_.setProperty(pf, plugin_.OBJECTIVE, 5);
+                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                    }
+                    else if (source == objective6_)
+                    {
+                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        core_.setProperty(pf, plugin_.OBJECTIVE, 6);
+                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                    }
+                    else if (source == servoOn_)
+                    {
+                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        core_.setProperty(pf, plugin_.SERVO_ON, 1);
+                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                        objectiveSlotTableDialog_.updateValues(false, objectiveSelected_);
+                    }                    
+                    else if (source == servoOff_)
+                    {
+                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        core_.setProperty(pf, plugin_.SERVO_ON, 0);
+                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                        objectiveSlotTableDialog_.updateValues(false, objectiveSelected_);
+                    }                     
+                    else if (source == digipotFocus_)
+                    {
+                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        core_.setProperty(pf, plugin_.DIGIPOT_CONTROLS_OFFSET, 0);
+                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                        globalTableDialog_.updateValues();
+                    }                    
+                    else if (source == digipotOffset_)
+                    {
+                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        core_.setProperty(pf, plugin_.DIGIPOT_CONTROLS_OFFSET, 1);
+                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                        globalTableDialog_.updateValues();
+                    }     
+                    else if (source == offsetStepUp_)
+                    {
+                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        core_.setProperty(pf, plugin_.EXECUTE_COMMAND, plugin_.EXECUTE_COMMAND_OFFSET_STEP_UP);
+                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                    }
+                    else if (source == offsetStepDown_)
+                    {
+                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        core_.setProperty(pf, plugin_.EXECUTE_COMMAND, plugin_.EXECUTE_COMMAND_OFFSET_STEP_DOWN);
+                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                    }
+                    else if (source == zeroZ_)
+                    {
+                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        core_.setProperty(pf, plugin_.FOCUS_POSITION_MICRONS, 0);
+                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                    }
+                    else if (source == goHome_)
+                    {
+                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        core_.setProperty(pf, plugin_.EXECUTE_COMMAND, plugin_.EXECUTE_COMMAND_Z_GO_HOME);
+                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                    }
+                    else if (source == liftToLoad_)
+                    {
+                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        core_.setProperty(pf, plugin_.EXECUTE_COMMAND, plugin_.EXECUTE_COMMAND_Z_LIFT_TO_LOAD);
+                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                    }
+                    else if (source == stepUp_)
+                    {
+                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        core_.setProperty(pf, plugin_.EXECUTE_COMMAND, plugin_.EXECUTE_COMMAND_Z_STEP_UP);
+                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                    }
+                    else if (source == stepDown_)
+                    {
+                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        core_.setProperty(pf, plugin_.EXECUTE_COMMAND, plugin_.EXECUTE_COMMAND_Z_STEP_DOWN);
+                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                    }
+                    else if (source == haltZ_)
+                    {
+                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        core_.setProperty(pf, plugin_.EXECUTE_COMMAND, plugin_.EXECUTE_COMMAND_Z_EMERGENCY_STOP);
+                        core_.setProperty(pf, plugin_.SERVO_ON, 0);
+                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                    }
+                    else
+                    {
+                        // Ignore unknown controls
+                    }
+                }
+                catch (Exception ex)
+                {
+                    gui_.logs().showError(ex.getMessage());
+                }
+                
+                updateValues(false);
+            }
+            else if (source.getClass() == JTextField.class)
+            {
+                JTextField widget = (JTextField)source;
+                try
+                {
+                    if (widget == liftDistance_)
+                    {
+                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        core_.setProperty(pf, plugin_.LIFT_TO_LOAD_DISTANCE_MICRONS, widget.getText());
+                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                        widget.setText(core_.getProperty(plugin_.DEVICE_NAME, plugin_.LIFT_TO_LOAD_DISTANCE_MICRONS));
+                    }
+                    else if (widget == stepSize_)
+                    {
+                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        core_.setProperty(pf, plugin_.FOCUS_POSITION_STEP_MICRONS, widget.getText());
+                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                        widget.setText(core_.getProperty(plugin_.DEVICE_NAME, plugin_.FOCUS_POSITION_STEP_MICRONS));
+                    }
+                    else if (widget == offsetStepSize_)
+                    {
+                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        core_.setProperty(pf, plugin_.OFFSET_POSITION_STEP_MICRONS, widget.getText());
+                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                        widget.setText(core_.getProperty(plugin_.DEVICE_NAME, plugin_.OFFSET_POSITION_STEP_MICRONS));
+                    }
+                    else
+                    {
+                        // Ignore unknown controls
+                    }                    
                 }
                 catch (Exception ex)
                 {
@@ -607,10 +1253,6 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
             {
                 // Ignore
             }
-        }    
-        else
-        {
-            // Ignore events during update
         }
     }
     
@@ -630,9 +1272,15 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
                 if (source == showObjectiveSlotConfigTable_)
                 {
                     // Ensure dialog starts up with correct values and objective enabled.
-                    objectiveSlotTableDialog_.updateValues(false, 
-                        (Integer)objectiveSelectSpinner_.getModel().getValue());     
-                    objectiveSlotTableDialog_.setVisible(newState);
+                    try
+                    {
+                        objectiveSlotTableDialog_.updateValues(false, objectiveSelected_);    
+                        objectiveSlotTableDialog_.setVisible(newState);
+                    }
+                    catch (Exception ex)
+                    {
+                        // Todo
+                    }
                 }
                 else if (source == showGlobalConfigTable_)
                 {

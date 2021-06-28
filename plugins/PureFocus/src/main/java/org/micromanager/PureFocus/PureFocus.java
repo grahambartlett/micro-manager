@@ -104,6 +104,9 @@ public class PureFocus implements MenuPlugin, SciJavaPlugin
     public static final String OBJECTIVE = "Setting-Objective";
     public static final String OFFSET_POSITION_MICRONS = "Setting-OffsetPositionMicrons";
     public static final String FOCUS_POSITION_MICRONS = "Setting-FocusPositionMicrons";
+    public static final String LIFT_TO_LOAD_DISTANCE_MICRONS = "Setting-LiftToLoadDistanceMicrons";
+    public static final String FOCUS_POSITION_STEP_MICRONS = "Setting-FocusPositionStepMicrons";
+    public static final String OFFSET_POSITION_STEP_MICRONS = "Setting-OffsetPositionStepMicrons";
 
     // Names of status values read back
     // NOTE: These must match the C++ device adapter property names    
@@ -118,6 +121,9 @@ public class PureFocus implements MenuPlugin, SciJavaPlugin
     public static final String IS_FOCUS_DRIVE_MOVING = "Status-IsFocusDriveMoving";
     public static final String POSITIVE_LIMIT_SWITCH = "Status-PositiveLimitSwitch";
     public static final String NEGATIVE_LIMIT_SWITCH = "Status-NegativeLimitSwitch";  
+    public static final String SERVO_IN_LIMIT = "Status-ServoInLimit";  
+    public static final String IS_SAMPLE_PRESENT = "Status-IsSamplePresent";  
+    public static final String IS_INTERFACE_CORRECT = "Status-IsInterfaceCorrect";  
     
     // Names of other properties
     // NOTE: These must match the C++ device adapter property names
@@ -127,6 +133,25 @@ public class PureFocus implements MenuPlugin, SciJavaPlugin
     public static final String ARRAY_READ_INDEX = "ArrayReadIndex";
     public static final String OBJECTIVE_PRESET_NAMES = "ObjectivePresetNames";
     
+    // Name of property to execute one-shot commands
+    public static final String EXECUTE_COMMAND = "ExecuteCommand";
+    
+    // Enumeration values for one-shot commands.  These must exactly match
+    // the values from the C++ device adapter.
+    // Note that I did try creating an enum for this, but Java does not seem to
+    // like it.  This is not ideal namespace-wise, but it at least works.
+	public static final Integer EXECUTE_COMMAND_NONE                = 0;
+    public static final Integer EXECUTE_COMMAND_SAVE_TO_UNIT		= 0x001FFE;
+    public static final Integer EXECUTE_COMMAND_OFFSET_STEP_UP      = 0x010FEF;
+    public static final Integer EXECUTE_COMMAND_OFFSET_STEP_DOWN	= 0x011FED;
+    public static final Integer EXECUTE_COMMAND_Z_STEP_UP			= 0x020FDF;
+    public static final Integer EXECUTE_COMMAND_Z_STEP_DOWN         = 0x021FDE;
+    public static final Integer EXECUTE_COMMAND_Z_EMERGENCY_STOP	= 0x022FDD;
+    public static final Integer EXECUTE_COMMAND_Z_SOFT_STOP         = 0x023FDC;
+    public static final Integer EXECUTE_COMMAND_Z_ZERO              = 0x024FDB;
+    public static final Integer EXECUTE_COMMAND_Z_GO_HOME			= 0x025FDA;
+    public static final Integer EXECUTE_COMMAND_Z_LIFT_TO_LOAD      = 0x026FD9;
+
     
     @Override
     public void setContext(Studio app)

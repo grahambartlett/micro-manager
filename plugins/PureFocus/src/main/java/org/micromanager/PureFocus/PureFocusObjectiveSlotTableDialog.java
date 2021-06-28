@@ -831,9 +831,6 @@ public class PureFocusObjectiveSlotTableDialog extends JDialog implements Action
 
                 // Update current settings
                 updateSlot(0);
-
-                core.updateCoreProperties();
-                core.updateSystemStateCache();
             }
             catch (Exception ex)
             {
