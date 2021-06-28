@@ -250,8 +250,8 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
 
         // Run timed updates of form.  This must be the last step after everything
         // else is ready.
-        timer_ = new Timer(2000, this);
-        timer_.setInitialDelay(2000);
+        timer_ = new Timer(1000, this);
+        timer_.setInitialDelay(1000);
         timer_.start();         
 	}
 
