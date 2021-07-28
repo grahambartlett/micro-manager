@@ -96,10 +96,12 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
     // Child dialogs
     PureFocusObjectiveSlotTableDialog objectiveSlotTableDialog_;
     PureFocusGlobalTableDialog globalTableDialog_;
+    PureFocusSetupDialog setupDialog_;
 
     // Menu elements
     private JCheckBoxMenuItem showObjectiveSlotConfigTable_;
     private JCheckBoxMenuItem showGlobalConfigTable_;
+    private JCheckBoxMenuItem showSetup_;
     private JMenuItem about_;
     
 	// GUI elements
@@ -243,6 +245,21 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
                 }
             });
         
+        setupDialog_ = new PureFocusSetupDialog(this, plugin_, gui_);
+        setupDialog_.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+        setupDialog_.setVisible(false);      
+        setupDialog_.addWindowListener(
+            new WindowAdapter()
+            {
+                @Override
+                public void windowClosing(WindowEvent windowEvent)
+                {
+                    showSetup_.setState(false);
+                    setupDialog_.setVisible(false);
+                }
+            });
+                
+        
         // Only display and update frame contents after everything else is ready
         updateInProgress_ = false;
 		pack();
@@ -279,6 +296,16 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
         JMenu menu;
 
         menuBar = new JMenuBar();
+        
+        menu = new JMenu("Setup");
+        menu.setMnemonic('S');
+        menuBar.add(menu);
+        
+        showSetup_ = new JCheckBoxMenuItem("Setup");
+        showSetup_.setMnemonic('G');
+        showSetup_.addItemListener(this);
+        showSetup_.setSelected(false);
+        menu.add(showSetup_);
         
         menu = new JMenu("Advanced");
         menu.setMnemonic('A');
@@ -986,6 +1013,15 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
                 // We also want to refresh values when the objective changes
                 objectiveSlotTableDialog_.updateValues(allValues, objectiveSelected_);
                 globalTableDialog_.updateValues();
+                setupDialog_.updateValues(allValues);
+            }
+            else
+            {
+                if (setupDialog_.isVisible())
+                {
+                    // Update display periodically
+                    setupDialog_.updateValues(false);
+                }
             }
         }
         catch (Exception ex)
@@ -1238,6 +1274,9 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
             {
                 if (source == about_)
                 {
+                    /** @todo This should be replaced with a more complete "About" dialog
+                     * containing the PF-850 image, and complete license details.
+                     */
                     JOptionPane.showMessageDialog(this,
                         "Prior PureFocus PF-850 configuration plugin\n"
                             + "Written by G Bartlett\n"
@@ -1286,6 +1325,10 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
                 {
                     globalTableDialog_.setVisible(newState);
                 }
+                else if (source == showSetup_)
+                {
+                    setupDialog_.setVisible(newState);
+                }                
                 else
                 {
                     // Unknown

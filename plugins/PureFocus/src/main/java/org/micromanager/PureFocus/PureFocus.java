@@ -123,7 +123,8 @@ public class PureFocus implements MenuPlugin, SciJavaPlugin
     public static final String NEGATIVE_LIMIT_SWITCH = "Status-NegativeLimitSwitch";  
     public static final String SERVO_IN_LIMIT = "Status-ServoInLimit";  
     public static final String IS_SAMPLE_PRESENT = "Status-IsSamplePresent";  
-    public static final String IS_INTERFACE_CORRECT = "Status-IsInterfaceCorrect";  
+    public static final String IS_INTERFACE_CORRECT = "Status-IsInterfaceCorrect";
+    public static final String LINE_DATA = "Status-LineData";  
     
     // Names of other properties
     // NOTE: These must match the C++ device adapter property names
