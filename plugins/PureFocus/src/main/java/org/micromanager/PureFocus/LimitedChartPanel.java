@@ -64,7 +64,7 @@ public class LimitedChartPanel extends ChartPanel
             rangeAxis.setRange(minY, maxY);        
             
             /* Set up graph lines */
-            domainAxis.setTickUnit(new NumberTickUnit(100.0, new DecimalFormat(), 1));
+            domainAxis.setTickUnit(new NumberTickUnit(xTickInterval, new DecimalFormat(), 1));
             domainAxis.setVerticalTickLabels(false);
 
             rangeAxis.setTickUnit(new NumberTickUnit(yTickInterval, new DecimalFormat(), 1));
@@ -72,7 +72,9 @@ public class LimitedChartPanel extends ChartPanel
     
             /* Show crosshairs for locating points */
             xyPlot.setDomainCrosshairVisible(true);
+            xyPlot.setDomainCrosshairLockedOnData(false);
             xyPlot.setRangeCrosshairVisible(true);
+            xyPlot.setRangeCrosshairLockedOnData(false);
             
             /* Set colour */
             XYItemRenderer renderer = xyPlot.getRenderer();
@@ -83,6 +85,36 @@ public class LimitedChartPanel extends ChartPanel
         graph.removeLegend();
     }
     
+    
+    public double getXCrosshair()
+    {
+        double returnValue = 0.0;
+        
+        Plot plot = getChart().getPlot();
+        if (plot.getClass() == XYPlot.class)
+        {
+            XYPlot xyPlot = (XYPlot)plot; 
+            returnValue = xyPlot.getDomainCrosshairValue();
+        }
+        
+        return returnValue;
+    }
+    
+    
+    public double getYCrosshair()
+    {
+        double returnValue = 0.0;
+        
+        Plot plot = getChart().getPlot();
+        if (plot.getClass() == XYPlot.class)
+        {
+            XYPlot xyPlot = (XYPlot)plot; 
+            returnValue = xyPlot.getRangeCrosshairValue();
+        }
+        
+        return returnValue;
+    }
+
     
     @Override
     public void restoreAutoDomainBounds()
