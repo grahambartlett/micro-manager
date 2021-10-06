@@ -91,6 +91,9 @@ public class PureFocusSetupDialog extends JDialog implements ActionListener
     private JButton setBackground_;
     private JButton setToZero_;
     private JButton setToAverage_;
+    
+    private int averageLevel_;
+    private int pinholeCentreLocation_;
 
     
 	/** Create dialog.  This is always instantiated when the main window is
@@ -352,7 +355,7 @@ public class PureFocusSetupDialog extends JDialog implements ActionListener
     }    
 
 
-    public void updateValues(boolean allValues)
+    public void updateValues(boolean updateCurrentObjective)
 	{
         String pf = parent_.getPureFocus();
         CMMCore core = gui_.getCMMCore();
@@ -362,6 +365,9 @@ public class PureFocusSetupDialog extends JDialog implements ActionListener
             if (continuousScan_.isSelected())
             {
                 /* Update at regular intervals */
+                double averageTotal = 0;
+                int maxLevel = 0;
+                int maxLevelLocation = 0;
                 for (int i = 0; i < 6; i++)
                 {
                     String values = core.getProperty(pf, plugin_.LINE_DATA + Integer.toString(i + 1));
@@ -377,9 +383,23 @@ public class PureFocusSetupDialog extends JDialog implements ActionListener
                             String value = values.substring((j * 3), (j * 3) + 3);
                             int valueInt = Integer.parseInt(value, 16);
                             graphData_.updateByIndex((i * 250) + j, (double)valueInt);
+
+                            /* Run total for average */
+                            averageTotal += (double)valueInt;  
+
+                            /* Look for maximum */
+                            if (valueInt > maxLevel)
+                            {
+                                maxLevel = valueInt;
+                                maxLevelLocation = (i * 250) + j;
+                            }
                         }
                     }                    
-                }
+                }                    
+
+                /* Store average and maximum */
+                averageLevel_ = (int)((averageTotal * (1.0 / 1500.0)) + 0.5);
+                pinholeCentreLocation_ = maxLevelLocation;      
             }
         }
 		catch (Exception ex)
@@ -389,6 +409,22 @@ public class PureFocusSetupDialog extends JDialog implements ActionListener
         
         String coordinates = "(" + Integer.toString((int)graphPanel_.getXCrosshair()) + ", " + Integer.toString((int)graphPanel_.getYCrosshair()) + ")";
         crosshairs_.setText(coordinates);
+        
+        if (updateCurrentObjective)
+        {
+            try
+            {
+                String background = core.getProperty(pf, PureFocus.CURRENT_PREFIX + PureFocus.BACKGROUND_A);
+                defaultBackground_.setText(background);
+                
+                String centre = core.getProperty(pf, PureFocus.CURRENT_PREFIX + PureFocus.PINHOLE_CENTRE);
+                defaultPinholeCentre_.setText(centre);
+            }
+            catch (Exception ex)
+            {
+                gui_.logs().showError(ex.getMessage());
+            }             
+        }
     }
     
     @Override
@@ -416,8 +452,11 @@ public class PureFocusSetupDialog extends JDialog implements ActionListener
                     singleScan_.setSelected(true);
                     continuousScan_.setSelected(false);
                     continuousScan_.setEnabled(true);
-
+                    
                     /* Run a single line scan on command */
+                    double averageTotal = 0;
+                    int maxLevel = 0;
+                    int maxLevelLocation = 0;
                     for (int i = 0; i < 6; i++)
                     {
                         String values = core.getProperty(pf, plugin_.LINE_DATA + Integer.toString(i + 1));
@@ -433,22 +472,293 @@ public class PureFocusSetupDialog extends JDialog implements ActionListener
                                 String value = values.substring((j * 3), (j * 3) + 3);
                                 int valueInt = Integer.parseInt(value, 16);
                                 graphData_.updateByIndex((i * 250) + j, (double)valueInt);
+                                
+                                /* Run total for average */
+                                averageTotal += (double)valueInt;  
+                                
+                                /* Look for maximum */
+                                if (valueInt > maxLevel)
+                                {
+                                    maxLevel = valueInt;
+                                    maxLevelLocation = (i * 250) + j;
+                                }
                             }
                         }                    
                     }                    
+                    
+                    /* Store average and maximum */
+                    averageLevel_ = (int)((averageTotal * (1.0 / 1500.0)) + 0.5);
+                    pinholeCentreLocation_ = maxLevelLocation;                 
                 }
+                else if (source == saveToFile_)
+                {
+                }
+                else if (source == setCentre_)
+                {
+                    /* Centre value comes from being typed in */
+                    String centreValue = defaultPinholeCentre_.getText();
+                    Float centreValueFloat = Float.valueOf(centreValue);
+                    centreValue = String.valueOf(centreValueFloat);
+                    
+                    Object[] options = {"Yes", "No"};
+                    int check = JOptionPane.showOptionDialog(this,
+                        "Do you wish to globally apply this now?",
+                        "PureFocus",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.QUESTION_MESSAGE,
+                        null,
+                        options,
+                        options[1]);
+                    
+                    if (check == 0)
+                    {
+                        /* Apply pinhole centre to all objectives */
+                        core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        String currentObjective = core.getProperty(pf, PureFocus.OBJECTIVE);
+                        
+                        for (int i = 1; i <= 6; i++)
+                        {
+                            core.setProperty(pf, PureFocus.OBJECTIVE, i);
+                            core.setProperty(pf, PureFocus.OBJECTIVE_PREFIX + String.valueOf(i) + "-" + PureFocus.PINHOLE_CENTRE, centreValue);
+                        }
+                        
+                        core.setProperty(pf, PureFocus.OBJECTIVE, currentObjective);            
+                        core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                        
+                        parent_.triggerUpdates(false, true, true, false);
+                    }
+                    else
+                    {
+                        /* Apply pinhole centre only to current objective */
+                        core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        String currentObjective = core.getProperty(pf, PureFocus.OBJECTIVE);   
+                        core.setProperty(pf, PureFocus.OBJECTIVE_PREFIX + currentObjective + "-" + PureFocus.PINHOLE_CENTRE, centreValue);
+                        core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                        
+                        parent_.triggerUpdates(false, true, false, false);
+                    }
+                }
+                else if (source == autoSetCentre_)
+                {
+                    /* Centre value comes from detecting peak within data */
+                    Float centreValueFloat = (float)pinholeCentreLocation_;
+                    String centreValue = String.valueOf(centreValueFloat);                    
+                    
+                    Object[] options = {"Yes", "No"};
+                    int check = JOptionPane.showOptionDialog(this,
+                        "Do you wish to globally apply this now?",
+                        "PureFocus",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.QUESTION_MESSAGE,
+                        null,
+                        options,
+                        options[1]);
+                    
+                    if (check == 0)
+                    {
+                        /* Apply pinhole centre to all objectives */
+                        core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        String currentObjective = core.getProperty(pf, PureFocus.OBJECTIVE);
+                        
+                        for (int i = 1; i <= 6; i++)
+                        {
+                            core.setProperty(pf, PureFocus.OBJECTIVE, i);
+                            core.setProperty(pf, PureFocus.OBJECTIVE_PREFIX + String.valueOf(i) + "-" + PureFocus.PINHOLE_CENTRE, centreValue);
+                        }
+                        
+                        core.setProperty(pf, PureFocus.OBJECTIVE, currentObjective);    
+                        core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                        
+                        parent_.triggerUpdates(false, true, true, false);
+                    }
+                    else
+                    {
+                        /* Apply pinhole centre only to current objective */
+                        core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        String currentObjective = core.getProperty(pf, PureFocus.OBJECTIVE);   
+                        core.setProperty(pf, PureFocus.OBJECTIVE_PREFIX + currentObjective + "-" + PureFocus.PINHOLE_CENTRE, centreValue);
+                        core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                        
+                        parent_.triggerUpdates(false, true, false, false);
+                    }
+                }
+                else if (source == setBackground_)
+                {
+                    /* Get background value from text entered */
+                    String backgroundValue = currentBackground_.getText();
+                    Float backgroundValueFloat = Float.valueOf(backgroundValue);
+                    backgroundValue = String.valueOf(backgroundValueFloat);                    
+                    
+                    Object[] options = {"Yes", "No"};
+                    int check = JOptionPane.showOptionDialog(this,
+                        "Do you also wish to apply this to all objectives and make it the default background?",
+                        "PureFocus",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.QUESTION_MESSAGE,
+                        null,
+                        options,
+                        options[1]);
+                    
+                    if (check == 0)
+                    {
+                        /* Apply background to all objectives */
+                        core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        String currentObjective = core.getProperty(pf, PureFocus.OBJECTIVE);
+                        
+                        for (int i = 1; i <= 6; i++)
+                        {
+                            String prefix = PureFocus.OBJECTIVE_PREFIX + String.valueOf(i) + "-";
+                            core.setProperty(pf, PureFocus.OBJECTIVE, i);
+                            core.setProperty(pf, prefix + PureFocus.BACKGROUND_A, backgroundValue);
+                            core.setProperty(pf, prefix + PureFocus.BACKGROUND_B, backgroundValue);
+                            core.setProperty(pf, prefix + PureFocus.BACKGROUND_C, backgroundValue);
+                            core.setProperty(pf, prefix + PureFocus.BACKGROUND_D, backgroundValue);
+                        }
+                        
+                        core.setProperty(pf, PureFocus.OBJECTIVE, currentObjective);    
+                        core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                        
+                        parent_.triggerUpdates(false, true, true, false);
+                    }
+                    else
+                    {
+                        /* Apply background only to current objective */
+                        core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        String currentObjective = core.getProperty(pf, PureFocus.OBJECTIVE);
+                        String prefix = PureFocus.OBJECTIVE_PREFIX + currentObjective + "-";
+                        core.setProperty(pf, prefix + PureFocus.BACKGROUND_A, backgroundValue);
+                        core.setProperty(pf, prefix + PureFocus.BACKGROUND_B, backgroundValue);
+                        core.setProperty(pf, prefix + PureFocus.BACKGROUND_C, backgroundValue);
+                        core.setProperty(pf, prefix + PureFocus.BACKGROUND_D, backgroundValue);
+                        core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                        
+                        parent_.triggerUpdates(false, true, false, false);
+                    }
+                }
+                else if (source == setToZero_)
+                {
+                    /* Background is just set to zero */
+                    Object[] options = {"Yes", "No"};
+                    int check = JOptionPane.showOptionDialog(this,
+                        "Do you also wish to apply this to all objectives and make it the default background?",
+                        "PureFocus",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.QUESTION_MESSAGE,
+                        null,
+                        options,
+                        options[1]);
+                    
+                    if (check == 0)
+                    {
+                        /* Apply background to all objectives */
+                        core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        String currentObjective = core.getProperty(pf, PureFocus.OBJECTIVE);
+                        
+                        for (int i = 1; i <= 6; i++)
+                        {
+                            String prefix = PureFocus.OBJECTIVE_PREFIX + String.valueOf(i) + "-";
+                            core.setProperty(pf, PureFocus.OBJECTIVE, i);
+                            core.setProperty(pf, prefix + PureFocus.BACKGROUND_A, "0");
+                            core.setProperty(pf, prefix + PureFocus.BACKGROUND_B, "0");
+                            core.setProperty(pf, prefix + PureFocus.BACKGROUND_C, "0");
+                            core.setProperty(pf, prefix + PureFocus.BACKGROUND_D, "0");
+                        }
+                        
+                        core.setProperty(pf, PureFocus.OBJECTIVE, currentObjective);            
+                        core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                        
+                        parent_.triggerUpdates(false, true, true, false);
+                    }
+                    else
+                    {
+                        /* Apply background only to current objective */
+                        core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        String currentObjective = core.getProperty(pf, PureFocus.OBJECTIVE); 
+                        String prefix = PureFocus.OBJECTIVE_PREFIX + currentObjective + "-";
+                        core.setProperty(pf, prefix + PureFocus.BACKGROUND_A, "0");
+                        core.setProperty(pf, prefix + PureFocus.BACKGROUND_B, "0");
+                        core.setProperty(pf, prefix + PureFocus.BACKGROUND_C, "0");
+                        core.setProperty(pf, prefix + PureFocus.BACKGROUND_D, "0");
+                        core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                        
+                        parent_.triggerUpdates(false, true, false, false);
+                    }
+                }
+                else if (source == setToAverage_)
+                {
+                    /* Background is set to average of all graph points */
+                    String backgroundValue = String.valueOf(averageLevel_);
+                    
+                    Object[] options = {"Yes", "No"};
+                    int check = JOptionPane.showOptionDialog(this,
+                        "Do you also wish to apply this to all objectives and make it the default background?",
+                        "PureFocus",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.QUESTION_MESSAGE,
+                        null,
+                        options,
+                        options[1]);
+                    
+                    if (check == 0)
+                    {
+                        /* Apply background to all objectives */
+                        core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        String currentObjective = core.getProperty(pf, PureFocus.OBJECTIVE);
+                        
+                        for (int i = 1; i <= 6; i++)
+                        {
+                            String prefix = PureFocus.OBJECTIVE_PREFIX + String.valueOf(i) + "-";
+                            core.setProperty(pf, PureFocus.OBJECTIVE, i);
+                            core.setProperty(pf, prefix + PureFocus.BACKGROUND_A, backgroundValue);
+                            core.setProperty(pf, prefix + PureFocus.BACKGROUND_B, backgroundValue);
+                            core.setProperty(pf, prefix + PureFocus.BACKGROUND_C, backgroundValue);
+                            core.setProperty(pf, prefix + PureFocus.BACKGROUND_D, backgroundValue);
+                        }
+                        
+                        core.setProperty(pf, PureFocus.OBJECTIVE, currentObjective);            
+                        core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                        
+                        parent_.triggerUpdates(false, true, true, false);
+                    }
+                    else
+                    {
+                        /* Apply background only to current objective */
+                        core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        String currentObjective = core.getProperty(pf, PureFocus.OBJECTIVE);
+                        String prefix = PureFocus.OBJECTIVE_PREFIX + currentObjective + "-";
+                        core.setProperty(pf, prefix + PureFocus.BACKGROUND_A, backgroundValue);
+                        core.setProperty(pf, prefix + PureFocus.BACKGROUND_B, backgroundValue);
+                        core.setProperty(pf, prefix + PureFocus.BACKGROUND_C, backgroundValue);
+                        core.setProperty(pf, prefix + PureFocus.BACKGROUND_D, backgroundValue);
+                        core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                        
+                        parent_.triggerUpdates(false, true, false, false);
+                    }
+                }
+                else
+                {
+                    // Unknown so ignore it
+                }
+            }                  
+            else
+            {
+                // Unknown so ignore it
             }
         }
 		catch (Exception ex)
 		{
+            try
+            {
+                // Ensure we do not leave this set, because it will lock the GUI
+                core.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+            }
+            catch (Exception e2)
+            {
+                // Ignore failure
+            }      
+            
 			gui_.logs().showError(ex.getMessage());
 		}  
-        
-                /* Update at regular intervals */
-    
-        
-        
-        
     }
 
 

@@ -312,7 +312,8 @@ public class PureFocus implements MenuPlugin, SciJavaPlugin
             {
                 // If the plugin is already open, force an update to display
                 // new settings.
-                myFrame_.updateValues(true);
+                myFrame_.triggerUpdates(true, true, true, true);
+                myFrame_.updateValues();
             }
         }
         else

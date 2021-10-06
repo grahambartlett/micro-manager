@@ -332,7 +332,8 @@ public class PureFocusGlobalTableDialog extends JDialog implements ActionListene
                 }
 
                 core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
-
+                
+                parent_.triggerUpdates(true, false, false, false);
                 updateValues();
             }
             catch (Exception ex)
@@ -342,7 +343,14 @@ public class PureFocusGlobalTableDialog extends JDialog implements ActionListene
                 {
                     // Ensure PureFocus is not left open for changes
                     core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                }
+                catch (Exception e2)
+                {
+                    // These actions should not be able to fail
+                }
 
+                try
+                {
                     // If something went wrong, update widget value
                     if (source.getClass() == JTextField.class)
                     {

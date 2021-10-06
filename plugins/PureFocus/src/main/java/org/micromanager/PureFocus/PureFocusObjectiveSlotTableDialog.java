@@ -119,7 +119,7 @@ public class PureFocusObjectiveSlotTableDialog extends JDialog implements Action
                     getClass().getResource("/org/micromanager/icons/microscope.gif")));
         
         updateInProgress_ = false;
-		updateValues(true, 0);      
+		updateValues(true, true, 0);      
 	}
     
 
@@ -550,14 +550,14 @@ public class PureFocusObjectiveSlotTableDialog extends JDialog implements Action
 	}
 
 
-    public void updateValues(boolean allValues, int activateSlot)
+    public void updateValues(boolean updateCurrentSlot, boolean updateAllSlots, int activateSlot)
 	{
         String val;
         int i, limit;
 
         updateInProgress_ = true;
         
-        if (allValues)
+        if (updateAllSlots)
         {
             for (i = 0; i <= 6; i++)
             {
@@ -566,46 +566,50 @@ public class PureFocusObjectiveSlotTableDialog extends JDialog implements Action
         }
         else
         {
-            // Read only current settings
+            // Read only current settings and selected slot
             updateSlot(0);
+            updateSlot(activateSlot);
         }
         
         // Grey out other slots
-        for (i = 1; i <= 6; i++)
+        if (updateAllSlots)
         {
-            boolean slotActive = (i == activateSlot);
-
-            objectivePreset_[i].setEnabled(slotActive);
-
-            for (int j = 0; j < 5; j++)
+            for (i = 1; i <= 6; i++)
             {
-                lensOffset_[i][j].setEnabled(slotActive);
-            }
+                boolean slotActive = (i == activateSlot);
 
-            kP_[i].setEnabled(slotActive);
-            kI_[i].setEnabled(slotActive);
-            kD_[i].setEnabled(slotActive);
-            outputLimitMinimum_[i].setEnabled(slotActive);
-            outputLimitMaximum_[i].setEnabled(slotActive);
-            sampleLowThreshold_[i].setEnabled(slotActive);
-            focusLowThreshold_[i].setEnabled(slotActive);
-            focusHighThreshold_[i].setEnabled(slotActive);
-            focusRangeThreshold_[i].setEnabled(slotActive);
-            interfaceHighThreshold_[i].setEnabled(slotActive);
-            interfaceLowThreshold_[i].setEnabled(slotActive);
-            laserPower_[i].setEnabled(slotActive);
-            backgroundA_[i].setEnabled(slotActive);
-            backgroundB_[i].setEnabled(slotActive);
-            backgroundC_[i].setEnabled(slotActive);
-            backgroundD_[i].setEnabled(slotActive);
-            regionStartD_[i].setEnabled(slotActive);
-            regionEndD_[i].setEnabled(slotActive);
-            pinholeCentre_[i].setEnabled(slotActive);
-            pinholeWidth_[i].setEnabled(slotActive);
-            isServoLimitOn_[i].setEnabled(slotActive);
-            servoLimitMaximumPositive_[i].setEnabled(slotActive);
-            servoLimitMaximumNegative_[i].setEnabled(slotActive);
-        }            
+                objectivePreset_[i].setEnabled(slotActive);
+
+                for (int j = 0; j < 5; j++)
+                {
+                    lensOffset_[i][j].setEnabled(slotActive);
+                }
+
+                kP_[i].setEnabled(slotActive);
+                kI_[i].setEnabled(slotActive);
+                kD_[i].setEnabled(slotActive);
+                outputLimitMinimum_[i].setEnabled(slotActive);
+                outputLimitMaximum_[i].setEnabled(slotActive);
+                sampleLowThreshold_[i].setEnabled(slotActive);
+                focusLowThreshold_[i].setEnabled(slotActive);
+                focusHighThreshold_[i].setEnabled(slotActive);
+                focusRangeThreshold_[i].setEnabled(slotActive);
+                interfaceHighThreshold_[i].setEnabled(slotActive);
+                interfaceLowThreshold_[i].setEnabled(slotActive);
+                laserPower_[i].setEnabled(slotActive);
+                backgroundA_[i].setEnabled(slotActive);
+                backgroundB_[i].setEnabled(slotActive);
+                backgroundC_[i].setEnabled(slotActive);
+                backgroundD_[i].setEnabled(slotActive);
+                regionStartD_[i].setEnabled(slotActive);
+                regionEndD_[i].setEnabled(slotActive);
+                pinholeCentre_[i].setEnabled(slotActive);
+                pinholeWidth_[i].setEnabled(slotActive);
+                isServoLimitOn_[i].setEnabled(slotActive);
+                servoLimitMaximumPositive_[i].setEnabled(slotActive);
+                servoLimitMaximumNegative_[i].setEnabled(slotActive);
+            }            
+        }
         
         updateInProgress_ = false;
 	}
@@ -839,7 +843,14 @@ public class PureFocusObjectiveSlotTableDialog extends JDialog implements Action
                 {
                     // Ensure PureFocus is not left open for changes
                     core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
-
+                }
+                catch (Exception e2)
+                {
+                    // These actions should not be able to fail
+                }
+                
+                try
+                {                
                     // If something went wrong, update widget value
                     if (source.getClass() == JTextField.class)
                     {
