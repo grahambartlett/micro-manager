@@ -1,4 +1,4 @@
-/**
+/*
  * Project: ASI CRISP Control
  * License: BSD 3-clause, see LICENSE.md
  * Author: Brandon Simpson (brandon@asiimaging.com)
@@ -107,7 +107,9 @@ public class UserSettings {
             list.stream().skip(1).forEach(crisp.getSettingsList()::add);
         }
         frame.getSpinnerPanel().updateSoftwareSettingsComboBox();
-        //System.out.println("LOADED JSON => " + json);
+        if (CRISPFrame.DEBUG) {
+            System.out.println("LOADED JSON => " + json);
+        }
     }
 
     /**
@@ -129,7 +131,9 @@ public class UserSettings {
         // save software settings
         final String json = new Gson().toJson(crisp.getSettingsList());
         settings.putString("settings", json);
-        //System.out.println("SAVED JSON => " + json);
+        if (CRISPFrame.DEBUG) {
+            System.out.println("SAVED JSON => " + json);
+        }
     }
 
 }

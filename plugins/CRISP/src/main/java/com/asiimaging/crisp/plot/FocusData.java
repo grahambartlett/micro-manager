@@ -1,4 +1,4 @@
-/**
+/*
  * Project: ASI CRISP Control
  * License: BSD 3-clause, see LICENSE.md
  * Author: Brandon Simpson (brandon@asiimaging.com)
@@ -29,7 +29,6 @@ public class FocusData {
             time, position, error);
     }
     
-    // FIXME: spaces or no spaces?
     public String toStringCSV() {
         return time + "," + position + "," + error;
     }

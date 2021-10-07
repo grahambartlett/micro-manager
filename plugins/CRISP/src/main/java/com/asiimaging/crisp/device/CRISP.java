@@ -1,4 +1,4 @@
-/**
+/*
  * Project: ASI CRISP Control
  * License: BSD 3-clause, see LICENSE.md
  * Author: Brandon Simpson (brandon@asiimaging.com)
@@ -7,7 +7,6 @@
 package com.asiimaging.crisp.device;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 import org.micromanager.Studio;
@@ -27,7 +26,7 @@ import mmcorej.StrVector;
  * <p>Example:
  * <blockquote><pre>
  * CRISP crisp = new CRISP();
- * crisp.findDevice();
+ * crisp.detectDevice();
  * crisp.getAxis(); // OK to call now
  * </pre></blockquote>
  * Documentation:
@@ -43,6 +42,12 @@ public class CRISP {
     /** The name of the device. */
     private String deviceName;
 
+    /** The version number of the firmware. */
+    private double firmwareVersion;
+
+    /** The letter after the firmware version number (MS2000 only). */
+    private char firmwareVersionLetter;
+    
     /** The type of controller CRISP is connected to. */
     private ControllerType deviceType;
 
@@ -80,6 +85,9 @@ public class CRISP {
         deviceType = ControllerType.NONE;
         settings = new ArrayList<>();
 
+        firmwareVersion = 0.0;
+        firmwareVersionLetter = Character.MIN_VALUE;
+        
         // always start with the default settings
         settings.add(new CRISPSettings(CRISPSettings.DEFAULT_PROFILE_NAME));
     }
@@ -87,10 +95,9 @@ public class CRISP {
     @Override
     public String toString() {
         return String.format(
-            "%s[deviceName=%s, deviceType=%s]", 
-            getClass().getSimpleName(), 
-            deviceName.isEmpty() ? "\"\"" : deviceName, 
-            deviceType
+            "%s[deviceName=%s, deviceType=%s]",
+            getClass().getSimpleName(),
+            deviceName, deviceType
         );
     }
 
@@ -151,7 +158,8 @@ public class CRISP {
         return new CRISPSettings(
             "Current Values",
             getGain(),
-            getLEDIntensity(), 
+            getLEDIntensity(),
+            getUpdateRateMs(),
             getNumAverages(),
             getObjectiveNA(),
             getLockRange()
@@ -183,6 +191,9 @@ public class CRISP {
                     break;
                 }
             }
+        }
+        if (found) {
+            setFirmwareVersion(); // sets firmwareVersion and firmwareVersionLetter
         }
         return found;
     }
@@ -220,16 +231,44 @@ public class CRISP {
         return deviceName;
     }
 
+    public double getFirmwareVersion() {
+        return firmwareVersion;
+    }
+
+    public char getFirmwareVersionLetter() {
+        return firmwareVersionLetter;
+    }
+    
+    // TODO: base class for generic methods? FirmwareVersion in prop names?
+    /**
+     * Sets firmwareVersion and firmwareVersionLetter by querying the device and parsing the String.
+     */
+    private void setFirmwareVersion() {
+        try {
+            if (deviceType == ControllerType.TIGER) {
+                final String version = core.getProperty(deviceName, "FirmwareVersion");
+                firmwareVersion = Double.parseDouble(version);
+            } else { // MS2000
+                final String version = core.getProperty(deviceName,"Version");
+                final String v = version.split("-")[1];
+                firmwareVersion = Double.parseDouble(v.substring(0, v.length()-2));
+                firmwareVersionLetter = v.charAt(v.length()-2);
+            }
+        } catch (Exception e) {
+            studio.logs().showError("could not get the firmware version!");
+        }
+    }
+    
     /**
      * Returns {@code true} if the device is in the "In Focus" state.
      *
      * @return {@code true} if the device is focus locked
      */
     public boolean isFocusLocked() {
-        return getState().equals(PropValue.STATE_IN_FOCUS);
+        return getState().equals("In Focus");
     }
     
-    // NOTE: this is a long running task, use a separate thread when calling this
+    // NOTE: this is a long-running task, use a separate thread when calling this
     public void getFocusCurve() {
         try {
             core.setProperty(deviceName, PropName.MS2000.OBTAIN_FOCUS_CURVE, PropValue.MS2000.DO_IT);
@@ -505,6 +544,21 @@ public class CRISP {
         return result;
     }
     
+     /**
+     * Returns the number of skips.
+     *
+     * @return the number of skips
+     */
+    public int getUpdateRateMs() {
+        int result = 0;
+        try {
+            result = Integer.parseInt(core.getProperty(deviceName, PropName.NUMBER_OF_SKIPS));
+        } catch (Exception e) {
+            //studio.logs().showError("CRISP: Failed to read the Number of Skips.");
+        }
+        return result;
+    }
+    
     /**
      * Returns the lock range.
      * 
@@ -556,6 +610,19 @@ public class CRISP {
             core.setProperty(deviceName, PropName.NUMBER_OF_AVERAGES, value);
         } catch (Exception e) {
             //studio.logs().showError("CRISP: Failed to set the Number of Averages.");
+        }
+    }
+    
+     /**
+     * Sets the number of skips.
+     *
+     * @param value the number of skips
+     */
+    public void setUpdateRateMs(final int value) {
+        try {
+            core.setProperty(deviceName, PropName.NUMBER_OF_SKIPS, value);
+        } catch (Exception e) {
+            //studio.logs().showError("CRISP: Failed to set the Number of Skips.");
         }
     }
     
@@ -617,8 +684,16 @@ public class CRISP {
      */
     public void setStateLogCal(final CRISPTimer timer) {
         try {
-            // controller becomes unresponsive during loG_cal => skip polling a few timer ticks
-            timer.onLogCal();
+            // controller becomes unresponsive during loG_cal => skip polling for a few timer ticks
+            if (deviceType == ControllerType.TIGER) {
+                if (firmwareVersion < 3.38) {
+                    timer.onLogCal();
+                }
+            } else { // MS2000 (this has been fixed in Whizkid at least since ~2016)
+                if (firmwareVersion < 9.2 && firmwareVersionLetter < 'j') {
+                    timer.onLogCal();
+                }
+            }
             core.setProperty(deviceName, PropName.CRISP_STATE, PropValue.STATE_LOG_CAL);
         } catch (Exception e) {
             studio.logs().showError("Failed to set the state to loG_cal");

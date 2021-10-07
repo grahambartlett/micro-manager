@@ -1,4 +1,4 @@
-/**
+/*
  * Project: ASI CRISP Control
  * License: BSD 3-clause, see LICENSE.md
  * Author: Brandon Simpson (brandon@asiimaging.com)
@@ -52,7 +52,7 @@ public class StatusPanel extends Panel {
         lblOffsetValue = new JLabel("###");
         
         // prevent text labels from jumping around during calibration
-        lblErrorValue.setMinimumSize(new Dimension(90, 10));
+        lblStateValue.setMinimumSize(new Dimension(95, 10));
         
         // add components to the panel
         add(lblState, "");

@@ -1,4 +1,4 @@
-/**
+/*
  * Project: ASI CRISP Control
  * License: BSD 3-clause, see LICENSE.md
  * Author: Brandon Simpson (brandon@asiimaging.com)
@@ -92,9 +92,9 @@ public class PlotPanel extends Panel {
         PlotFrame.createPlotWindow(
             "CRISP Data Plot",
             "Focus Curve",
-            "Position",
+            "Position", // (\u00B5m)
             "Error",
-            data.createXYSeries()
+            data
         );
     }
 
@@ -144,9 +144,9 @@ public class PlotPanel extends Panel {
             PlotFrame.createPlotWindow(
                 "CRISP Data Viewer",
                 "Focus Curve",
-                "Position",
+                "Position", // (\u00B5m)
                 "Error",
-                data.createXYSeries()
+                data
             );
         } catch (Exception e) {
             studio.logs().showError("could not open the file: " + file.toString());
@@ -173,7 +173,7 @@ public class PlotPanel extends Panel {
                 if (isPollingEnabled) {
                     frame.getSpinnerPanel().setPollingCheckBox(true);
                 }
-                btnPlot.setEnabled(isPollingEnabled);
+                btnPlot.setEnabled(true);
                 showPlotWindow();
             }
             

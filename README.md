@@ -12,13 +12,15 @@ To get the complete source code follow these instructions:
 
 1. Clone the repository: `git clone https://github.com/micro-manager/micro-manager.git`
 2. Move Git bash into the repository: `cd micro-manager`
-3. Make sure any submodules are also cloned: `git submodule update --init --recursive`
+3. Make sure any submodules are also cloned: `git submodule update --init --recursive`  
+For more information about working with Git submodules click [here](https://git-scm.com/book/en/v2/Git-Tools-Submodules).  
+(Previously we recommended using the `--remote` flag when updating the submodule(s). This is no longer necessary and should be avoided.)
 
-If you are working only with the source code that is publicly available then that's all. Some vendors do not allow us to make public device adapters written for their equipment.  If you are part of the micro-manager group, you can get access to these "secret" device adapters by:
+**Maintainers only**: Some vendors do not allow us to make public device adapters written for their equipment.  If you are part of the micro-manager group, you can get access to these "secret" device adapters by:
 
 1. Move Git bash into the `mmCoreAndDevices` submodule: `cd mmCoreAndDevices`
 2. Change to the "privateMain" branch: `git checkout privateMain`
-3. "privateMain" has a submodule that main does not. Make sure that any new submodules are in a consistent state: `git submodule update --init --recursive --remote`
+3. "privateMain" has a submodule that main does not. Make sure that any new submodules are in a consistent state: `git submodule update --init --recursive --remote`  
 For more information about working with Git submodules click [here](https://git-scm.com/book/en/v2/Git-Tools-Submodules). 
 
 
@@ -30,4 +32,4 @@ Additional information is available on the Micro-Manager website at
 https://micro-manager.org
 
 ### Contributing  
-Start here: https://micro-manager.org/wiki/How_to_debug_and_develop_MM2.0
+Start here: https://micro-manager.org/How_to_debug_and_develop_MM2.0

@@ -1,4 +1,4 @@
-/**
+/*
  * Project: ASI CRISP Control
  * License: BSD 3-clause, see LICENSE.md
  * Author: Brandon Simpson (brandon@asiimaging.com)
@@ -17,9 +17,8 @@ import javax.swing.JLabel;
 
 import com.asiimaging.crisp.device.CRISP;
 import com.asiimaging.crisp.device.CRISPTimer;
+import com.asiimaging.crisp.device.ControllerType;
 import com.asiimaging.ui.Panel;
-import com.google.gson.Gson;
-import mmcorej.DeviceType;
 import org.micromanager.Studio;
 
 import com.asiimaging.crisp.data.Icons;
@@ -38,7 +37,7 @@ public class CRISPFrame extends JFrame {
     
     // DEBUG => flag to turn on debug mode when editing the ui
     // use "debug" in MigLayout to see layout constraints
-    private static final boolean DEBUG = false;
+    public static final boolean DEBUG = false;
 
     private final CMMCore core;
     private final Studio studio;
@@ -129,6 +128,19 @@ public class CRISPFrame extends JFrame {
         // disable spinners if already focus locked
         if (crisp.isFocusLocked()) {
             spinnerPanel.setEnabledFocusLockSpinners(false);
+            buttonPanel.setCalibrationButtonStates(false);
+        }
+        
+        // disable update rate spinner if using old firmware
+        if (crisp.getDeviceType() == ControllerType.TIGER) {
+            if (crisp.getFirmwareVersion() < 3.38) {
+                spinnerPanel.setEnabledUpdateRateSpinner(false);
+            }
+        } else {
+            if (crisp.getFirmwareVersion() < 9.2
+                    || crisp.getFirmwareVersionLetter() < 'n') {
+                spinnerPanel.setEnabledUpdateRateSpinner(false);
+            }
         }
         
         // TODO: support this feature on Tiger
@@ -237,11 +249,8 @@ public class CRISPFrame extends JFrame {
         return spinnerPanel;
     }
 
-    public CRISPTimer getTimer() {
-        return timer;
-    }
-
     public CRISP getCRISP() {
         return crisp;
     }
+    
 }
