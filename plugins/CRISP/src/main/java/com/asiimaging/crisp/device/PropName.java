@@ -1,4 +1,4 @@
-/**
+/*
  * Project: ASI CRISP Control
  * License: BSD 3-clause, see LICENSE.md
  * Author: Brandon Simpson (brandon@asiimaging.com)
@@ -22,6 +22,7 @@ public class PropName {
     
     public static final String LED_INTENSITY = "LED Intensity";
     public static final String OBJECTIVE_NA = "Objective NA";
+    public static final String NUMBER_OF_SKIPS = "Number of Skips";
     public static final String NUMBER_OF_AVERAGES = "Number of Averages";
     public static final String MAX_LOCK_RANGE = "Max Lock Range(mm)";
     public static final String DITHER_ERROR = "Dither Error";
