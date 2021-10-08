@@ -61,9 +61,6 @@ public class PureFocusObjectiveSlotTableDialog extends JDialog implements Action
     /** Reference to the MM/ImageJ GUI */
 	private final Studio gui_;
     
-    /** Reference to the plugin which owns this */
-	private final PureFocus plugin_;
-    
     /** Reference to the frame which owns this */
 	private final PureFocusFrame parent_;
 	
@@ -101,16 +98,14 @@ public class PureFocusObjectiveSlotTableDialog extends JDialog implements Action
 	/** Create dialog.  This is always instantiated when the main window is
      * created, and is shown or hidden as required.
 	 * @param parent Base window
-     * @param plugin PureFocus plugin
 	 * @param gui MM script interface
    	 */
-	public PureFocusObjectiveSlotTableDialog(PureFocusFrame parent, PureFocus plugin, Studio gui)
+	public PureFocusObjectiveSlotTableDialog(PureFocusFrame parent, Studio gui)
 	{
         // We want this to be a modeless dialog, to work with the rest of the GUI
         super(parent, "Prior PureFocus PF-850 Objective Slots");
             
 		parent_ = parent;
-        plugin_ = plugin;
         gui_ = gui;
         
 		initComponents();
@@ -165,17 +160,17 @@ public class PureFocusObjectiveSlotTableDialog extends JDialog implements Action
             String prefix;
             if (i == 0)
             {
-                prefix = plugin_.CURRENT_PREFIX;
+                prefix = PureFocus.CURRENT_PREFIX;
             }
             else
             {
-                prefix = plugin_.OBJECTIVE_PREFIX + Integer.toString(i) + "-"; 
+                prefix = PureFocus.OBJECTIVE_PREFIX + Integer.toString(i) + "-"; 
             }
             
             objectivePreset_[i] = new javax.swing.JComboBox(parent_.objectivePresetNames);         
             objectivePreset_[i].setPreferredSize(new java.awt.Dimension(100, 20));
             objectivePreset_[i].addActionListener(this);
-            objectivePreset_[i].setActionCommand(prefix + plugin_.PRESET);
+            objectivePreset_[i].setActionCommand(prefix + PureFocus.PRESET);
             objectivePreset_[i].setEnabled(true);
 
             int j;
@@ -184,122 +179,122 @@ public class PureFocusObjectiveSlotTableDialog extends JDialog implements Action
                 lensOffset_[i][j] = new javax.swing.JTextField();
                 lensOffset_[i][j].setPreferredSize(new java.awt.Dimension(100, 20));
                 lensOffset_[i][j].addActionListener(this);
-                lensOffset_[i][j].setActionCommand(prefix + plugin_.LENS_OFFSET + Integer.toString(j));
+                lensOffset_[i][j].setActionCommand(prefix + PureFocus.LENS_OFFSET + Integer.toString(j));
             }
             
             kP_[i] = new javax.swing.JTextField();
             kP_[i].setPreferredSize(new java.awt.Dimension(100, 20));
             kP_[i].addActionListener(this);
-            kP_[i].setActionCommand(prefix + plugin_.KP);
+            kP_[i].setActionCommand(prefix + PureFocus.KP);
 
             kI_[i] = new javax.swing.JTextField();
             kI_[i].setPreferredSize(new java.awt.Dimension(100, 20));
             kI_[i].addActionListener(this);
-            kI_[i].setActionCommand(prefix + plugin_.KI);
+            kI_[i].setActionCommand(prefix + PureFocus.KI);
 
             kD_[i] = new javax.swing.JTextField();
             kD_[i].setPreferredSize(new java.awt.Dimension(100, 20));
             kD_[i].addActionListener(this);
-            kD_[i].setActionCommand(prefix + plugin_.KD);
+            kD_[i].setActionCommand(prefix + PureFocus.KD);
             
             outputLimitMinimum_[i] = new javax.swing.JTextField();
             outputLimitMinimum_[i].setPreferredSize(new java.awt.Dimension(100, 20));
             outputLimitMinimum_[i].addActionListener(this);
-            outputLimitMinimum_[i].setActionCommand(prefix + plugin_.OUTPUT_LIMIT_MINIMUM);
+            outputLimitMinimum_[i].setActionCommand(prefix + PureFocus.OUTPUT_LIMIT_MINIMUM);
             
             outputLimitMaximum_[i] = new javax.swing.JTextField();
             outputLimitMaximum_[i].setPreferredSize(new java.awt.Dimension(100, 20));
             outputLimitMaximum_[i].addActionListener(this);
-            outputLimitMaximum_[i].setActionCommand(prefix + plugin_.OUTPUT_LIMIT_MAXIMUM);
+            outputLimitMaximum_[i].setActionCommand(prefix + PureFocus.OUTPUT_LIMIT_MAXIMUM);
             
             sampleLowThreshold_[i] = new javax.swing.JTextField();
             sampleLowThreshold_[i].setPreferredSize(new java.awt.Dimension(100, 20));
             sampleLowThreshold_[i].addActionListener(this);
-            sampleLowThreshold_[i].setActionCommand(prefix + plugin_.SAMPLE_LOW_THRESHOLD);
+            sampleLowThreshold_[i].setActionCommand(prefix + PureFocus.SAMPLE_LOW_THRESHOLD);
             
             focusLowThreshold_[i] = new javax.swing.JTextField();
             focusLowThreshold_[i].setPreferredSize(new java.awt.Dimension(100, 20));
             focusLowThreshold_[i].addActionListener(this);
-            focusLowThreshold_[i].setActionCommand(prefix + plugin_.FOCUS_LOW_THRESHOLD);
+            focusLowThreshold_[i].setActionCommand(prefix + PureFocus.FOCUS_LOW_THRESHOLD);
             
             focusHighThreshold_[i] = new javax.swing.JTextField();
             focusHighThreshold_[i].setPreferredSize(new java.awt.Dimension(100, 20));
             focusHighThreshold_[i].addActionListener(this);
-            focusHighThreshold_[i].setActionCommand(prefix + plugin_.FOCUS_HIGH_THRESHOLD);
+            focusHighThreshold_[i].setActionCommand(prefix + PureFocus.FOCUS_HIGH_THRESHOLD);
             
             focusRangeThreshold_[i] = new javax.swing.JTextField();
             focusRangeThreshold_[i].setPreferredSize(new java.awt.Dimension(100, 20));
             focusRangeThreshold_[i].addActionListener(this);           
-            focusRangeThreshold_[i].setActionCommand(prefix + plugin_.FOCUS_RANGE_THRESHOLD);
+            focusRangeThreshold_[i].setActionCommand(prefix + PureFocus.FOCUS_RANGE_THRESHOLD);
             
             interfaceHighThreshold_[i] = new javax.swing.JTextField();
             interfaceHighThreshold_[i].setPreferredSize(new java.awt.Dimension(100, 20));
             interfaceHighThreshold_[i].addActionListener(this);
-            interfaceHighThreshold_[i].setActionCommand(prefix + plugin_.INTERFACE_HIGH_THRESHOLD);
+            interfaceHighThreshold_[i].setActionCommand(prefix + PureFocus.INTERFACE_HIGH_THRESHOLD);
             
             interfaceLowThreshold_[i] = new javax.swing.JTextField();
             interfaceLowThreshold_[i].setPreferredSize(new java.awt.Dimension(100, 20));
             interfaceLowThreshold_[i].addActionListener(this);
-            interfaceLowThreshold_[i].setActionCommand(prefix + plugin_.INTERFACE_LOW_THRESHOLD);
+            interfaceLowThreshold_[i].setActionCommand(prefix + PureFocus.INTERFACE_LOW_THRESHOLD);
             
             laserPower_[i] = new javax.swing.JTextField();
             laserPower_[i].setPreferredSize(new java.awt.Dimension(100, 20));
             laserPower_[i].addActionListener(this);
-            laserPower_[i].setActionCommand(prefix + plugin_.LASER_POWER);
+            laserPower_[i].setActionCommand(prefix + PureFocus.LASER_POWER);
 
             backgroundA_[i] = new javax.swing.JTextField();
             backgroundA_[i].setPreferredSize(new java.awt.Dimension(100, 20));
             backgroundA_[i].addActionListener(this);   
-            backgroundA_[i].setActionCommand(prefix + plugin_.BACKGROUND_A);
+            backgroundA_[i].setActionCommand(prefix + PureFocus.BACKGROUND_A);
             
             backgroundB_[i] = new javax.swing.JTextField();
             backgroundB_[i].setPreferredSize(new java.awt.Dimension(100, 20));
             backgroundB_[i].addActionListener(this);
-            backgroundB_[i].setActionCommand(prefix + plugin_.BACKGROUND_B);
+            backgroundB_[i].setActionCommand(prefix + PureFocus.BACKGROUND_B);
 
             backgroundC_[i] = new javax.swing.JTextField();
             backgroundC_[i].setPreferredSize(new java.awt.Dimension(100, 20));
             backgroundC_[i].addActionListener(this);
-            backgroundC_[i].setActionCommand(prefix + plugin_.BACKGROUND_C);
+            backgroundC_[i].setActionCommand(prefix + PureFocus.BACKGROUND_C);
 
             backgroundD_[i] = new javax.swing.JTextField();
             backgroundD_[i].setPreferredSize(new java.awt.Dimension(100, 20));
             backgroundD_[i].addActionListener(this);   
-            backgroundD_[i].setActionCommand(prefix + plugin_.BACKGROUND_D);
+            backgroundD_[i].setActionCommand(prefix + PureFocus.BACKGROUND_D);
             
             regionStartD_[i] = new javax.swing.JTextField();
             regionStartD_[i].setPreferredSize(new java.awt.Dimension(100, 20));
             regionStartD_[i].addActionListener(this);
-            regionStartD_[i].setActionCommand(prefix + plugin_.REGION_START_D);
+            regionStartD_[i].setActionCommand(prefix + PureFocus.REGION_START_D);
 
             regionEndD_[i] = new javax.swing.JTextField();
             regionEndD_[i].setPreferredSize(new java.awt.Dimension(100, 20));
             regionEndD_[i].addActionListener(this);
-            regionEndD_[i].setActionCommand(prefix + plugin_.REGION_END_D);
+            regionEndD_[i].setActionCommand(prefix + PureFocus.REGION_END_D);
             
             pinholeCentre_[i] = new javax.swing.JTextField();
             pinholeCentre_[i].setPreferredSize(new java.awt.Dimension(100, 20));
             pinholeCentre_[i].addActionListener(this);
-            pinholeCentre_[i].setActionCommand(prefix + plugin_.PINHOLE_CENTRE);
+            pinholeCentre_[i].setActionCommand(prefix + PureFocus.PINHOLE_CENTRE);
 
             pinholeWidth_[i] = new javax.swing.JTextField();
             pinholeWidth_[i].setPreferredSize(new java.awt.Dimension(100, 20));
             pinholeWidth_[i].addActionListener(this);
-            pinholeWidth_[i].setActionCommand(prefix + plugin_.PINHOLE_WIDTH);
+            pinholeWidth_[i].setActionCommand(prefix + PureFocus.PINHOLE_WIDTH);
             
             isServoLimitOn_[i] = new javax.swing.JCheckBox();
             isServoLimitOn_[i].addActionListener(this);     
-            isServoLimitOn_[i].setActionCommand(prefix + plugin_.IS_SERVO_LIMIT_ON);
+            isServoLimitOn_[i].setActionCommand(prefix + PureFocus.IS_SERVO_LIMIT_ON);
 
             servoLimitMaximumPositive_[i] = new javax.swing.JTextField();
             servoLimitMaximumPositive_[i].setPreferredSize(new java.awt.Dimension(100, 20));
             servoLimitMaximumPositive_[i].addActionListener(this);
-            servoLimitMaximumPositive_[i].setActionCommand(prefix + plugin_.SERVO_LIMIT_MAXIMUM_POSITIVE);
+            servoLimitMaximumPositive_[i].setActionCommand(prefix + PureFocus.SERVO_LIMIT_MAXIMUM_POSITIVE);
             
             servoLimitMaximumNegative_[i] = new javax.swing.JTextField();
             servoLimitMaximumNegative_[i].setPreferredSize(new java.awt.Dimension(100, 20));
             servoLimitMaximumNegative_[i].addActionListener(this); 
-            servoLimitMaximumNegative_[i].setActionCommand(prefix + plugin_.SERVO_LIMIT_MAXIMUM_NEGATIVE);
+            servoLimitMaximumNegative_[i].setActionCommand(prefix + PureFocus.SERVO_LIMIT_MAXIMUM_NEGATIVE);
         }
         
         // All current properties are read-only
@@ -627,139 +622,139 @@ public class PureFocusObjectiveSlotTableDialog extends JDialog implements Action
 		{
             if (slot == 0)
             {
-                String prefix = plugin_.CURRENT_PREFIX;
+                String prefix = PureFocus.CURRENT_PREFIX;
                 
-                kP_[slot].setText(core.getProperty(pf, prefix + plugin_.KP));
-                kI_[slot].setText(core.getProperty(pf, prefix + plugin_.KI));
-                kD_[slot].setText(core.getProperty(pf, prefix + plugin_.KD));    
-                outputLimitMinimum_[slot].setText(core.getProperty(pf, prefix + plugin_.OUTPUT_LIMIT_MINIMUM));
-                outputLimitMaximum_[slot].setText(core.getProperty(pf, prefix + plugin_.OUTPUT_LIMIT_MAXIMUM));
-                sampleLowThreshold_[slot].setText(core.getProperty(pf, prefix + plugin_.SAMPLE_LOW_THRESHOLD));
-                focusLowThreshold_[slot].setText(core.getProperty(pf, prefix + plugin_.FOCUS_LOW_THRESHOLD));
-                focusHighThreshold_[slot].setText(core.getProperty(pf, prefix + plugin_.FOCUS_HIGH_THRESHOLD));
-                focusRangeThreshold_[slot].setText(core.getProperty(pf, prefix + plugin_.FOCUS_RANGE_THRESHOLD));
-                interfaceHighThreshold_[slot].setText(core.getProperty(pf, prefix + plugin_.INTERFACE_HIGH_THRESHOLD));
-                interfaceLowThreshold_[slot].setText(core.getProperty(pf, prefix + plugin_.INTERFACE_LOW_THRESHOLD));
-                laserPower_[slot].setText(core.getProperty(pf, prefix + plugin_.LASER_POWER));
-                backgroundA_[slot].setText(core.getProperty(pf, prefix + plugin_.BACKGROUND_A));
-                backgroundB_[slot].setText(core.getProperty(pf, prefix + plugin_.BACKGROUND_B));
-                backgroundC_[slot].setText(core.getProperty(pf, prefix + plugin_.BACKGROUND_C));
-                backgroundD_[slot].setText(core.getProperty(pf, prefix + plugin_.BACKGROUND_D));
-                regionStartD_[slot].setText(core.getProperty(pf, prefix + plugin_.REGION_START_D));
-                regionEndD_[slot].setText(core.getProperty(pf, prefix + plugin_.REGION_END_D));
-                pinholeCentre_[slot].setText(core.getProperty(pf, prefix + plugin_.PINHOLE_CENTRE));
-                pinholeWidth_[slot].setText(core.getProperty(pf, prefix + plugin_.PINHOLE_WIDTH));
-                isServoLimitOn_[slot].setSelected(Long.valueOf(core.getProperty(pf, prefix + plugin_.IS_SERVO_LIMIT_ON)) != 0);
-                servoLimitMaximumPositive_[slot].setText(core.getProperty(pf, prefix + plugin_.SERVO_LIMIT_MAXIMUM_POSITIVE));
-                servoLimitMaximumNegative_[slot].setText(core.getProperty(pf, prefix + plugin_.SERVO_LIMIT_MAXIMUM_NEGATIVE));                
+                kP_[slot].setText(core.getProperty(pf, prefix + PureFocus.KP));
+                kI_[slot].setText(core.getProperty(pf, prefix + PureFocus.KI));
+                kD_[slot].setText(core.getProperty(pf, prefix + PureFocus.KD));    
+                outputLimitMinimum_[slot].setText(core.getProperty(pf, prefix + PureFocus.OUTPUT_LIMIT_MINIMUM));
+                outputLimitMaximum_[slot].setText(core.getProperty(pf, prefix + PureFocus.OUTPUT_LIMIT_MAXIMUM));
+                sampleLowThreshold_[slot].setText(core.getProperty(pf, prefix + PureFocus.SAMPLE_LOW_THRESHOLD));
+                focusLowThreshold_[slot].setText(core.getProperty(pf, prefix + PureFocus.FOCUS_LOW_THRESHOLD));
+                focusHighThreshold_[slot].setText(core.getProperty(pf, prefix + PureFocus.FOCUS_HIGH_THRESHOLD));
+                focusRangeThreshold_[slot].setText(core.getProperty(pf, prefix + PureFocus.FOCUS_RANGE_THRESHOLD));
+                interfaceHighThreshold_[slot].setText(core.getProperty(pf, prefix + PureFocus.INTERFACE_HIGH_THRESHOLD));
+                interfaceLowThreshold_[slot].setText(core.getProperty(pf, prefix + PureFocus.INTERFACE_LOW_THRESHOLD));
+                laserPower_[slot].setText(core.getProperty(pf, prefix + PureFocus.LASER_POWER));
+                backgroundA_[slot].setText(core.getProperty(pf, prefix + PureFocus.BACKGROUND_A));
+                backgroundB_[slot].setText(core.getProperty(pf, prefix + PureFocus.BACKGROUND_B));
+                backgroundC_[slot].setText(core.getProperty(pf, prefix + PureFocus.BACKGROUND_C));
+                backgroundD_[slot].setText(core.getProperty(pf, prefix + PureFocus.BACKGROUND_D));
+                regionStartD_[slot].setText(core.getProperty(pf, prefix + PureFocus.REGION_START_D));
+                regionEndD_[slot].setText(core.getProperty(pf, prefix + PureFocus.REGION_END_D));
+                pinholeCentre_[slot].setText(core.getProperty(pf, prefix + PureFocus.PINHOLE_CENTRE));
+                pinholeWidth_[slot].setText(core.getProperty(pf, prefix + PureFocus.PINHOLE_WIDTH));
+                isServoLimitOn_[slot].setSelected(Long.valueOf(core.getProperty(pf, prefix + PureFocus.IS_SERVO_LIMIT_ON)) != 0);
+                servoLimitMaximumPositive_[slot].setText(core.getProperty(pf, prefix + PureFocus.SERVO_LIMIT_MAXIMUM_POSITIVE));
+                servoLimitMaximumNegative_[slot].setText(core.getProperty(pf, prefix + PureFocus.SERVO_LIMIT_MAXIMUM_NEGATIVE));                
             }
             else
             {
-                String prefix = plugin_.OBJECTIVE_PREFIX + Integer.toString(slot) + "-";
+                String prefix = PureFocus.OBJECTIVE_PREFIX + Integer.toString(slot) + "-";
                 String value;
  
-                value = core.getProperty(pf, prefix + plugin_.PRESET);
-                core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.PRESET, value);
+                value = core.getProperty(pf, prefix + PureFocus.PRESET);
+                core.defineConfig(PureFocus.CONFIG_GROUP, PureFocus.CONFIG_GROUP_PRESET, PureFocus.DEVICE_NAME, prefix + PureFocus.PRESET, value);
                 objectivePreset_[slot].setSelectedItem(value);
                 
                 int i;
                 for (i = 0; i < 5; i ++)
                 {
-                    value = core.getProperty(pf, prefix + plugin_.LENS_OFFSET + Integer.toString(i));
-                    core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.LENS_OFFSET + Integer.toString(i), value);
+                    value = core.getProperty(pf, prefix + PureFocus.LENS_OFFSET + Integer.toString(i));
+                    core.defineConfig(PureFocus.CONFIG_GROUP, PureFocus.CONFIG_GROUP_PRESET, PureFocus.DEVICE_NAME, prefix + PureFocus.LENS_OFFSET + Integer.toString(i), value);
                     lensOffset_[slot][i].setText(value);
                 }
                 
-                value = core.getProperty(pf, prefix + plugin_.KP);
-                core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.KP, value);
+                value = core.getProperty(pf, prefix + PureFocus.KP);
+                core.defineConfig(PureFocus.CONFIG_GROUP, PureFocus.CONFIG_GROUP_PRESET, PureFocus.DEVICE_NAME, prefix + PureFocus.KP, value);
                 kP_[slot].setText(value);
                 
-                value = core.getProperty(pf, prefix + plugin_.KI);
-                core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.KI, value);
+                value = core.getProperty(pf, prefix + PureFocus.KI);
+                core.defineConfig(PureFocus.CONFIG_GROUP, PureFocus.CONFIG_GROUP_PRESET, PureFocus.DEVICE_NAME, prefix + PureFocus.KI, value);
                 kI_[slot].setText(value);
                 
-                value = core.getProperty(pf, prefix + plugin_.KD);
-                core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.KD, value);
+                value = core.getProperty(pf, prefix + PureFocus.KD);
+                core.defineConfig(PureFocus.CONFIG_GROUP, PureFocus.CONFIG_GROUP_PRESET, PureFocus.DEVICE_NAME, prefix + PureFocus.KD, value);
                 kD_[slot].setText(value);
                 
-                value = core.getProperty(pf, prefix + plugin_.OUTPUT_LIMIT_MINIMUM);
-                core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.OUTPUT_LIMIT_MINIMUM, value);
+                value = core.getProperty(pf, prefix + PureFocus.OUTPUT_LIMIT_MINIMUM);
+                core.defineConfig(PureFocus.CONFIG_GROUP, PureFocus.CONFIG_GROUP_PRESET, PureFocus.DEVICE_NAME, prefix + PureFocus.OUTPUT_LIMIT_MINIMUM, value);
                 outputLimitMinimum_[slot].setText(value);
                 
-                value = core.getProperty(pf, prefix + plugin_.OUTPUT_LIMIT_MAXIMUM);
-                core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.OUTPUT_LIMIT_MAXIMUM, value);
+                value = core.getProperty(pf, prefix + PureFocus.OUTPUT_LIMIT_MAXIMUM);
+                core.defineConfig(PureFocus.CONFIG_GROUP, PureFocus.CONFIG_GROUP_PRESET, PureFocus.DEVICE_NAME, prefix + PureFocus.OUTPUT_LIMIT_MAXIMUM, value);
                 outputLimitMaximum_[slot].setText(value);
                 
-                value = core.getProperty(pf, prefix + plugin_.SAMPLE_LOW_THRESHOLD);
-                core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.SAMPLE_LOW_THRESHOLD, value);
+                value = core.getProperty(pf, prefix + PureFocus.SAMPLE_LOW_THRESHOLD);
+                core.defineConfig(PureFocus.CONFIG_GROUP, PureFocus.CONFIG_GROUP_PRESET, PureFocus.DEVICE_NAME, prefix + PureFocus.SAMPLE_LOW_THRESHOLD, value);
                 sampleLowThreshold_[slot].setText(value);
                 
-                value = core.getProperty(pf, prefix + plugin_.FOCUS_LOW_THRESHOLD);
-                core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.FOCUS_LOW_THRESHOLD, value);
+                value = core.getProperty(pf, prefix + PureFocus.FOCUS_LOW_THRESHOLD);
+                core.defineConfig(PureFocus.CONFIG_GROUP, PureFocus.CONFIG_GROUP_PRESET, PureFocus.DEVICE_NAME, prefix + PureFocus.FOCUS_LOW_THRESHOLD, value);
                 focusLowThreshold_[slot].setText(value);
                 
-                value = core.getProperty(pf, prefix + plugin_.FOCUS_HIGH_THRESHOLD);
-                core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.FOCUS_HIGH_THRESHOLD, value);
+                value = core.getProperty(pf, prefix + PureFocus.FOCUS_HIGH_THRESHOLD);
+                core.defineConfig(PureFocus.CONFIG_GROUP, PureFocus.CONFIG_GROUP_PRESET, PureFocus.DEVICE_NAME, prefix + PureFocus.FOCUS_HIGH_THRESHOLD, value);
                 focusHighThreshold_[slot].setText(value);
                 
-                value = core.getProperty(pf, prefix + plugin_.FOCUS_RANGE_THRESHOLD);
-                core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.FOCUS_RANGE_THRESHOLD, value);
+                value = core.getProperty(pf, prefix + PureFocus.FOCUS_RANGE_THRESHOLD);
+                core.defineConfig(PureFocus.CONFIG_GROUP, PureFocus.CONFIG_GROUP_PRESET, PureFocus.DEVICE_NAME, prefix + PureFocus.FOCUS_RANGE_THRESHOLD, value);
                 focusRangeThreshold_[slot].setText(value);
                 
-                value = core.getProperty(pf, prefix + plugin_.INTERFACE_HIGH_THRESHOLD);
-                core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.INTERFACE_HIGH_THRESHOLD, value);
+                value = core.getProperty(pf, prefix + PureFocus.INTERFACE_HIGH_THRESHOLD);
+                core.defineConfig(PureFocus.CONFIG_GROUP, PureFocus.CONFIG_GROUP_PRESET, PureFocus.DEVICE_NAME, prefix + PureFocus.INTERFACE_HIGH_THRESHOLD, value);
                 interfaceHighThreshold_[slot].setText(value);
                 
-                value = core.getProperty(pf, prefix + plugin_.INTERFACE_LOW_THRESHOLD);
-                core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.INTERFACE_LOW_THRESHOLD, value);
+                value = core.getProperty(pf, prefix + PureFocus.INTERFACE_LOW_THRESHOLD);
+                core.defineConfig(PureFocus.CONFIG_GROUP, PureFocus.CONFIG_GROUP_PRESET, PureFocus.DEVICE_NAME, prefix + PureFocus.INTERFACE_LOW_THRESHOLD, value);
                 interfaceLowThreshold_[slot].setText(value);
                 
-                value = core.getProperty(pf, prefix + plugin_.LASER_POWER);
-                core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.LASER_POWER, value);
+                value = core.getProperty(pf, prefix + PureFocus.LASER_POWER);
+                core.defineConfig(PureFocus.CONFIG_GROUP, PureFocus.CONFIG_GROUP_PRESET, PureFocus.DEVICE_NAME, prefix + PureFocus.LASER_POWER, value);
                 laserPower_[slot].setText(value);
                 
-                value = core.getProperty(pf, prefix + plugin_.BACKGROUND_A);
-                core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.BACKGROUND_A, value);
+                value = core.getProperty(pf, prefix + PureFocus.BACKGROUND_A);
+                core.defineConfig(PureFocus.CONFIG_GROUP, PureFocus.CONFIG_GROUP_PRESET, PureFocus.DEVICE_NAME, prefix + PureFocus.BACKGROUND_A, value);
                 backgroundA_[slot].setText(value);
                 
-                value = core.getProperty(pf, prefix + plugin_.BACKGROUND_B);
-                core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.BACKGROUND_B, value);
+                value = core.getProperty(pf, prefix + PureFocus.BACKGROUND_B);
+                core.defineConfig(PureFocus.CONFIG_GROUP, PureFocus.CONFIG_GROUP_PRESET, PureFocus.DEVICE_NAME, prefix + PureFocus.BACKGROUND_B, value);
                 backgroundB_[slot].setText(value);
                 
-                value = core.getProperty(pf, prefix + plugin_.BACKGROUND_C);
-                core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.BACKGROUND_C, value);
+                value = core.getProperty(pf, prefix + PureFocus.BACKGROUND_C);
+                core.defineConfig(PureFocus.CONFIG_GROUP, PureFocus.CONFIG_GROUP_PRESET, PureFocus.DEVICE_NAME, prefix + PureFocus.BACKGROUND_C, value);
                 backgroundC_[slot].setText(value);
                 
-                value = core.getProperty(pf, prefix + plugin_.BACKGROUND_D);
-                core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.BACKGROUND_D, value);
+                value = core.getProperty(pf, prefix + PureFocus.BACKGROUND_D);
+                core.defineConfig(PureFocus.CONFIG_GROUP, PureFocus.CONFIG_GROUP_PRESET, PureFocus.DEVICE_NAME, prefix + PureFocus.BACKGROUND_D, value);
                 backgroundD_[slot].setText(value);
                 
-                value = core.getProperty(pf, prefix + plugin_.REGION_START_D);
-                core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.REGION_START_D, value);
+                value = core.getProperty(pf, prefix + PureFocus.REGION_START_D);
+                core.defineConfig(PureFocus.CONFIG_GROUP, PureFocus.CONFIG_GROUP_PRESET, PureFocus.DEVICE_NAME, prefix + PureFocus.REGION_START_D, value);
                 regionStartD_[slot].setText(value);
                 
-                value = core.getProperty(pf, prefix + plugin_.REGION_END_D);
-                core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.REGION_END_D, value);
+                value = core.getProperty(pf, prefix + PureFocus.REGION_END_D);
+                core.defineConfig(PureFocus.CONFIG_GROUP, PureFocus.CONFIG_GROUP_PRESET, PureFocus.DEVICE_NAME, prefix + PureFocus.REGION_END_D, value);
                 regionEndD_[slot].setText(value);
                 
-                value = core.getProperty(pf, prefix + plugin_.PINHOLE_CENTRE);
-                core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.PINHOLE_CENTRE, value);
+                value = core.getProperty(pf, prefix + PureFocus.PINHOLE_CENTRE);
+                core.defineConfig(PureFocus.CONFIG_GROUP, PureFocus.CONFIG_GROUP_PRESET, PureFocus.DEVICE_NAME, prefix + PureFocus.PINHOLE_CENTRE, value);
                 pinholeCentre_[slot].setText(value);
                 
-                value = core.getProperty(pf, prefix + plugin_.PINHOLE_WIDTH);
-                core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.PINHOLE_WIDTH, value);
+                value = core.getProperty(pf, prefix + PureFocus.PINHOLE_WIDTH);
+                core.defineConfig(PureFocus.CONFIG_GROUP, PureFocus.CONFIG_GROUP_PRESET, PureFocus.DEVICE_NAME, prefix + PureFocus.PINHOLE_WIDTH, value);
                 pinholeWidth_[slot].setText(value);
                 
-                value = core.getProperty(pf, prefix + plugin_.IS_SERVO_LIMIT_ON);
-                core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.IS_SERVO_LIMIT_ON, value);
+                value = core.getProperty(pf, prefix + PureFocus.IS_SERVO_LIMIT_ON);
+                core.defineConfig(PureFocus.CONFIG_GROUP, PureFocus.CONFIG_GROUP_PRESET, PureFocus.DEVICE_NAME, prefix + PureFocus.IS_SERVO_LIMIT_ON, value);
                 isServoLimitOn_[slot].setSelected(Long.valueOf(value) != 0);
                 
-                value = core.getProperty(pf, prefix + plugin_.SERVO_LIMIT_MAXIMUM_POSITIVE);
-                core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.SERVO_LIMIT_MAXIMUM_POSITIVE, value);
+                value = core.getProperty(pf, prefix + PureFocus.SERVO_LIMIT_MAXIMUM_POSITIVE);
+                core.defineConfig(PureFocus.CONFIG_GROUP, PureFocus.CONFIG_GROUP_PRESET, PureFocus.DEVICE_NAME, prefix + PureFocus.SERVO_LIMIT_MAXIMUM_POSITIVE, value);
                 servoLimitMaximumPositive_[slot].setText(value);
                 
-                value = core.getProperty(pf, prefix + plugin_.SERVO_LIMIT_MAXIMUM_NEGATIVE);
-                core.defineConfig(plugin_.CONFIG_GROUP, plugin_.CONFIG_GROUP_PRESET, plugin_.DEVICE_NAME, prefix + plugin_.SERVO_LIMIT_MAXIMUM_NEGATIVE, value);
+                value = core.getProperty(pf, prefix + PureFocus.SERVO_LIMIT_MAXIMUM_NEGATIVE);
+                core.defineConfig(PureFocus.CONFIG_GROUP, PureFocus.CONFIG_GROUP_PRESET, PureFocus.DEVICE_NAME, prefix + PureFocus.SERVO_LIMIT_MAXIMUM_NEGATIVE, value);
                 servoLimitMaximumNegative_[slot].setText(value);
             }
 		}
@@ -785,13 +780,13 @@ public class PureFocusObjectiveSlotTableDialog extends JDialog implements Action
             try
             {
                 int slot = 0;
-                core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
+                core.setProperty(PureFocus.DEVICE_NAME, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 1);
 
                 // Work out slot number from property name
-                int slotStart = propertyName.indexOf(plugin_.OBJECTIVE_PREFIX);
+                int slotStart = propertyName.indexOf(PureFocus.OBJECTIVE_PREFIX);
                 if (slotStart >= 0)
                 {
-                    int index = slotStart + plugin_.OBJECTIVE_PREFIX.length();
+                    int index = slotStart + PureFocus.OBJECTIVE_PREFIX.length();
                     slot = Integer.valueOf(propertyName.substring(index, index + 1));
                 }
 
@@ -825,7 +820,7 @@ public class PureFocusObjectiveSlotTableDialog extends JDialog implements Action
                     // Unknown so ignore it
                 }
 
-                core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                core.setProperty(PureFocus.DEVICE_NAME, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 0);
 
                 if (slot != 0)
                 {
@@ -842,7 +837,7 @@ public class PureFocusObjectiveSlotTableDialog extends JDialog implements Action
                 try
                 {
                     // Ensure PureFocus is not left open for changes
-                    core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                    core.setProperty(PureFocus.DEVICE_NAME, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 0);
                 }
                 catch (Exception e2)
                 {

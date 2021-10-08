@@ -213,10 +213,10 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
         {
             try
             {
-                core_.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
-                core_.setProperty(plugin_.DEVICE_NAME, plugin_.ARRAY_READ_INDEX, i);
-                core_.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
-                String newName = core_.getProperty(plugin_.DEVICE_NAME, plugin_.OBJECTIVE_PRESET_NAMES);
+                core_.setProperty(PureFocus.DEVICE_NAME, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 1);
+                core_.setProperty(PureFocus.DEVICE_NAME, PureFocus.ARRAY_READ_INDEX, i);
+                core_.setProperty(PureFocus.DEVICE_NAME, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 0);
+                String newName = core_.getProperty(PureFocus.DEVICE_NAME, PureFocus.OBJECTIVE_PRESET_NAMES);
                 objectivePresetNames.add(newName);
                 i++;
             }
@@ -232,7 +232,7 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
         super.setIconImage(Toolkit.getDefaultToolkit().getImage(
                     getClass().getResource("/org/micromanager/icons/microscope.gif")));
         
-        objectiveSlotTableDialog_ = new PureFocusObjectiveSlotTableDialog(this, plugin_, gui_);
+        objectiveSlotTableDialog_ = new PureFocusObjectiveSlotTableDialog(this, gui_);
         objectiveSlotTableDialog_.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         objectiveSlotTableDialog_.setVisible(false);      
         objectiveSlotTableDialog_.addWindowListener(
@@ -246,7 +246,7 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
                 }
             });
 
-        globalTableDialog_ = new PureFocusGlobalTableDialog(this, plugin_, gui_);
+        globalTableDialog_ = new PureFocusGlobalTableDialog(this, gui_);
         globalTableDialog_.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         globalTableDialog_.setVisible(false);      
         globalTableDialog_.addWindowListener(
@@ -260,7 +260,7 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
                 }
             });
         
-        setupDialog_ = new PureFocusSetupDialog(this, plugin_, gui_);
+        setupDialog_ = new PureFocusSetupDialog(this, gui_);
         setupDialog_.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         setupDialog_.setVisible(false);      
         setupDialog_.addWindowListener(
@@ -785,14 +785,12 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
             String val;
             int valueInt;
             
-            val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.OBJECTIVE);
+            val = core_.getProperty(PureFocus.DEVICE_NAME, PureFocus.OBJECTIVE);
             valueInt = Integer.parseInt(val);
-            boolean objectiveChanged = false;
             if (objectiveSelected_ != valueInt)
             {
                 // Update objective selected
                 objectiveSelected_ = valueInt;
-                objectiveChanged = true;
                 updateCurrentObjective = true;
                 updateAllObjectives = true;
             
@@ -903,53 +901,53 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
             // Objective panel
             if (updateCurrentObjective || updateAllObjectives)
             {
-                val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.OBJECTIVE_PREFIX + "1-" + plugin_.PRESET);
+                val = core_.getProperty(PureFocus.DEVICE_NAME, PureFocus.OBJECTIVE_PREFIX + "1-" + PureFocus.PRESET);
                 objective1_.setText("1: " + val);
-                val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.OBJECTIVE_PREFIX + "2-" + plugin_.PRESET);
+                val = core_.getProperty(PureFocus.DEVICE_NAME, PureFocus.OBJECTIVE_PREFIX + "2-" + PureFocus.PRESET);
                 objective2_.setText("2: " + val);
-                val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.OBJECTIVE_PREFIX + "3-" + plugin_.PRESET);
+                val = core_.getProperty(PureFocus.DEVICE_NAME, PureFocus.OBJECTIVE_PREFIX + "3-" + PureFocus.PRESET);
                 objective3_.setText("3: " + val);  
-                val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.OBJECTIVE_PREFIX + "4-" + plugin_.PRESET);
+                val = core_.getProperty(PureFocus.DEVICE_NAME, PureFocus.OBJECTIVE_PREFIX + "4-" + PureFocus.PRESET);
                 objective4_.setText("4: " + val);
-                val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.OBJECTIVE_PREFIX + "5-" + plugin_.PRESET);
+                val = core_.getProperty(PureFocus.DEVICE_NAME, PureFocus.OBJECTIVE_PREFIX + "5-" + PureFocus.PRESET);
                 objective5_.setText("5: " + val);  
-                val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.OBJECTIVE_PREFIX + "6-" + plugin_.PRESET);
+                val = core_.getProperty(PureFocus.DEVICE_NAME, PureFocus.OBJECTIVE_PREFIX + "6-" + PureFocus.PRESET);
                 objective6_.setText("6: " + val);
             }
             
             if (updateSettings)
             {
-                val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.LIFT_TO_LOAD_DISTANCE_MICRONS);
+                val = core_.getProperty(PureFocus.DEVICE_NAME, PureFocus.LIFT_TO_LOAD_DISTANCE_MICRONS);
                 liftDistance_.setText(val);
-                val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.FOCUS_POSITION_STEP_MICRONS);
+                val = core_.getProperty(PureFocus.DEVICE_NAME, PureFocus.FOCUS_POSITION_STEP_MICRONS);
                 stepSize_.setText(val);
-                val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.OFFSET_POSITION_STEP_MICRONS);
+                val = core_.getProperty(PureFocus.DEVICE_NAME, PureFocus.OFFSET_POSITION_STEP_MICRONS);
                 offsetStepSize_.setText(val);                              
             }          
             
             // Flags panel
-            val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.FOCUS_STATE);
+            val = core_.getProperty(PureFocus.DEVICE_NAME, PureFocus.FOCUS_STATE);
             valueInt = Integer.parseInt(val);
             if ((valueInt != 0) != inFocus_.isSelected())
             {
                 inFocus_.setSelected((valueInt != 0));
             }
             
-            val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.IS_SAMPLE_PRESENT);
+            val = core_.getProperty(PureFocus.DEVICE_NAME, PureFocus.IS_SAMPLE_PRESENT);
             valueInt = Integer.parseInt(val);
             if ((valueInt != 0) != servoInLimit_.isSelected())
             {
                 sampleDetected_.setSelected((valueInt != 0));
             }              
             
-            val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.IS_INTERFACE_CORRECT);
+            val = core_.getProperty(PureFocus.DEVICE_NAME, PureFocus.IS_INTERFACE_CORRECT);
             valueInt = Integer.parseInt(val);
             if ((valueInt != 0) != servoInLimit_.isSelected())
             {
                 correctInterface_.setSelected((valueInt != 0));
             }                
 
-            val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.SERVO_IN_LIMIT);
+            val = core_.getProperty(PureFocus.DEVICE_NAME, PureFocus.SERVO_IN_LIMIT);
             valueInt = Integer.parseInt(val);
             if ((valueInt != 0) != servoInLimit_.isSelected())
             {
@@ -957,7 +955,7 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
             }            
             
             // Servo panel
-            val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.SERVO_ON);
+            val = core_.getProperty(PureFocus.DEVICE_NAME, PureFocus.SERVO_ON);
             valueInt = Integer.parseInt(val);
             if ((valueInt != 0) != servoOn_.isSelected())
             {
@@ -980,7 +978,7 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
             }
             
             // Measurement panel
-            val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.CALCULATION_ABCD);
+            val = core_.getProperty(PureFocus.DEVICE_NAME, PureFocus.CALCULATION_ABCD);
             String[] splitValues = val.split(":");
             double calculationA = Double.valueOf(splitValues[0]);
             double calculationB = Double.valueOf(splitValues[1]);
@@ -989,7 +987,7 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
             calculationAPlusB_.setText(Double.toString(calculationA + calculationB));
             calculationAMinusB_.setText(Double.toString(calculationA - calculationB));
             
-            val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.FOCUS_PID_ERROR);
+            val = core_.getProperty(PureFocus.DEVICE_NAME, PureFocus.FOCUS_PID_ERROR);
             error_.setText(val);
             double error = Double.valueOf(val);
             if (error < -1.0)
@@ -1005,15 +1003,15 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
                 errorSlider_.setValue((int)(error * (double)ERROR_SLIDER_SCALING));
             }
            
-            val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.FOCUS_PID_TARGET);
+            val = core_.getProperty(PureFocus.DEVICE_NAME, PureFocus.FOCUS_PID_TARGET);
             target_.setText(val);
             
             // Position panel
-            val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.FOCUS_POSITION_MICRONS);
+            val = core_.getProperty(PureFocus.DEVICE_NAME, PureFocus.FOCUS_POSITION_MICRONS);
             zPosition_.setText(val);
             
             // Digipot panel
-            val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.DIGIPOT_CONTROLS_OFFSET);
+            val = core_.getProperty(PureFocus.DEVICE_NAME, PureFocus.DIGIPOT_CONTROLS_OFFSET);
             valueInt = Integer.parseInt(val);
             if ((valueInt != 0) != digipotOffset_.isSelected())
             {
@@ -1036,10 +1034,10 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
             }
             
             // Offset panel
-            val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.OBJECTIVE_PREFIX + Integer.toString(objectiveSelected_) + "-" + plugin_.LENS_OFFSET + "0");
+            val = core_.getProperty(PureFocus.DEVICE_NAME, PureFocus.OBJECTIVE_PREFIX + Integer.toString(objectiveSelected_) + "-" + PureFocus.LENS_OFFSET + "0");
             offsetDefault_.setText(val);
             
-            val = core_.getProperty(plugin_.DEVICE_NAME, plugin_.OFFSET_POSITION_MICRONS);
+            val = core_.getProperty(PureFocus.DEVICE_NAME, PureFocus.OFFSET_POSITION_MICRONS);
             offsetCurrent_.setText(val);
             
             /* Update child windows as required */
@@ -1090,7 +1088,7 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
 	/** @return Name of currently-selected PureFocus */
     public String getPureFocus()
     {
-        return plugin_.DEVICE_NAME;
+        return PureFocus.DEVICE_NAME;
     }
     
     
@@ -1139,129 +1137,129 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
                     {
                         // The call to updateValues() will update the objective
                         // buttons and dialogs for this change
-                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
-                        core_.setProperty(pf, plugin_.OBJECTIVE, 1);
-                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                        core_.setProperty(pf, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        core_.setProperty(pf, PureFocus.OBJECTIVE, 1);
+                        core_.setProperty(pf, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 0);
                         triggerUpdates(true, true, true, true);
                     }
                     else if (source == objective2_)
                     {
-                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
-                        core_.setProperty(pf, plugin_.OBJECTIVE, 2);
-                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                        core_.setProperty(pf, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        core_.setProperty(pf, PureFocus.OBJECTIVE, 2);
+                        core_.setProperty(pf, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 0);
                         triggerUpdates(true, true, true, true);
                     }
                     else if (source == objective3_)
                     {
-                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
-                        core_.setProperty(pf, plugin_.OBJECTIVE, 3);
-                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                        core_.setProperty(pf, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        core_.setProperty(pf, PureFocus.OBJECTIVE, 3);
+                        core_.setProperty(pf, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 0);
                         triggerUpdates(true, true, true, true);
                     }
                     else if (source == objective4_)
                     {
-                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
-                        core_.setProperty(pf, plugin_.OBJECTIVE, 4);
-                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                        core_.setProperty(pf, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        core_.setProperty(pf, PureFocus.OBJECTIVE, 4);
+                        core_.setProperty(pf, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 0);
                         triggerUpdates(true, true, true, true);
                     }
                     else if (source == objective5_)
                     {
-                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
-                        core_.setProperty(pf, plugin_.OBJECTIVE, 5);
-                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                        core_.setProperty(pf, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        core_.setProperty(pf, PureFocus.OBJECTIVE, 5);
+                        core_.setProperty(pf, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 0);
                         triggerUpdates(true, true, true, true);
                     }
                     else if (source == objective6_)
                     {
-                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
-                        core_.setProperty(pf, plugin_.OBJECTIVE, 6);
-                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                        core_.setProperty(pf, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        core_.setProperty(pf, PureFocus.OBJECTIVE, 6);
+                        core_.setProperty(pf, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 0);
                         triggerUpdates(true, true, true, true);
                     }
                     else if (source == servoOn_)
                     {
-                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
-                        core_.setProperty(pf, plugin_.SERVO_ON, 1);
-                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                        core_.setProperty(pf, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        core_.setProperty(pf, PureFocus.SERVO_ON, 1);
+                        core_.setProperty(pf, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 0);
                         triggerUpdates(true, false, false, false);
                     }                    
                     else if (source == servoOff_)
                     {
-                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
-                        core_.setProperty(pf, plugin_.SERVO_ON, 0);
-                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                        core_.setProperty(pf, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        core_.setProperty(pf, PureFocus.SERVO_ON, 0);
+                        core_.setProperty(pf, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 0);
                         triggerUpdates(true, false, false, false);
                     }                     
                     else if (source == digipotFocus_)
                     {
-                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
-                        core_.setProperty(pf, plugin_.DIGIPOT_CONTROLS_OFFSET, 0);
-                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                        core_.setProperty(pf, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        core_.setProperty(pf, PureFocus.DIGIPOT_CONTROLS_OFFSET, 0);
+                        core_.setProperty(pf, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 0);
                         triggerUpdates(true, false, false, false);
                     }                    
                     else if (source == digipotOffset_)
                     {
-                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
-                        core_.setProperty(pf, plugin_.DIGIPOT_CONTROLS_OFFSET, 1);
-                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                        core_.setProperty(pf, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        core_.setProperty(pf, PureFocus.DIGIPOT_CONTROLS_OFFSET, 1);
+                        core_.setProperty(pf, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 0);
                         triggerUpdates(true, false, false, false);
                     }     
                     else if (source == offsetStepUp_)
                     {
-                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
-                        core_.setProperty(pf, plugin_.EXECUTE_COMMAND, plugin_.EXECUTE_COMMAND_OFFSET_STEP_UP);
-                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                        core_.setProperty(pf, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        core_.setProperty(pf, PureFocus.EXECUTE_COMMAND, PureFocus.EXECUTE_COMMAND_OFFSET_STEP_UP);
+                        core_.setProperty(pf, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 0);
                         triggerUpdates(false, false, false, true);
                     }
                     else if (source == offsetStepDown_)
                     {
-                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
-                        core_.setProperty(pf, plugin_.EXECUTE_COMMAND, plugin_.EXECUTE_COMMAND_OFFSET_STEP_DOWN);
-                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                        core_.setProperty(pf, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        core_.setProperty(pf, PureFocus.EXECUTE_COMMAND, PureFocus.EXECUTE_COMMAND_OFFSET_STEP_DOWN);
+                        core_.setProperty(pf, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 0);
                         triggerUpdates(false, false, false, true);
                     }
                     else if (source == zeroZ_)
                     {
-                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
-                        core_.setProperty(pf, plugin_.FOCUS_POSITION_MICRONS, 0);
-                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                        core_.setProperty(pf, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        core_.setProperty(pf, PureFocus.FOCUS_POSITION_MICRONS, 0);
+                        core_.setProperty(pf, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 0);
                         triggerUpdates(false, false, false, true);
                     }
                     else if (source == goHome_)
                     {
-                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
-                        core_.setProperty(pf, plugin_.EXECUTE_COMMAND, plugin_.EXECUTE_COMMAND_Z_GO_HOME);
-                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                        core_.setProperty(pf, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        core_.setProperty(pf, PureFocus.EXECUTE_COMMAND, PureFocus.EXECUTE_COMMAND_Z_GO_HOME);
+                        core_.setProperty(pf, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 0);
                         triggerUpdates(false, false, false, true);
                     }
                     else if (source == liftToLoad_)
                     {
-                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
-                        core_.setProperty(pf, plugin_.EXECUTE_COMMAND, plugin_.EXECUTE_COMMAND_Z_LIFT_TO_LOAD);
-                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                        core_.setProperty(pf, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        core_.setProperty(pf, PureFocus.EXECUTE_COMMAND, PureFocus.EXECUTE_COMMAND_Z_LIFT_TO_LOAD);
+                        core_.setProperty(pf, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 0);
                         triggerUpdates(false, false, false, true);
                     }
                     else if (source == stepUp_)
                     {
-                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
-                        core_.setProperty(pf, plugin_.EXECUTE_COMMAND, plugin_.EXECUTE_COMMAND_Z_STEP_UP);
-                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                        core_.setProperty(pf, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        core_.setProperty(pf, PureFocus.EXECUTE_COMMAND, PureFocus.EXECUTE_COMMAND_Z_STEP_UP);
+                        core_.setProperty(pf, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 0);
                         triggerUpdates(false, false, false, true);
                     }
                     else if (source == stepDown_)
                     {
-                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
-                        core_.setProperty(pf, plugin_.EXECUTE_COMMAND, plugin_.EXECUTE_COMMAND_Z_STEP_DOWN);
-                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                        core_.setProperty(pf, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        core_.setProperty(pf, PureFocus.EXECUTE_COMMAND, PureFocus.EXECUTE_COMMAND_Z_STEP_DOWN);
+                        core_.setProperty(pf, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 0);
                         triggerUpdates(false, false, false, true);
                     }
                     else if (source == haltZ_)
                     {
-                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
-                        core_.setProperty(pf, plugin_.EXECUTE_COMMAND, plugin_.EXECUTE_COMMAND_Z_EMERGENCY_STOP);
-                        core_.setProperty(pf, plugin_.SERVO_ON, 0);
-                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                        core_.setProperty(pf, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        core_.setProperty(pf, PureFocus.EXECUTE_COMMAND, PureFocus.EXECUTE_COMMAND_Z_EMERGENCY_STOP);
+                        core_.setProperty(pf, PureFocus.SERVO_ON, 0);
+                        core_.setProperty(pf, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 0);
                         triggerUpdates(false, false, false, true);
                     }
                     else
@@ -1274,7 +1272,7 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
                     try
                     {
                         // Ensure we do not leave this set, because it will lock the GUI
-                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                        core_.setProperty(pf, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 0);
                     }
                     catch (Exception e2)
                     {
@@ -1293,26 +1291,26 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
                 {
                     if (widget == liftDistance_)
                     {
-                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
-                        core_.setProperty(pf, plugin_.LIFT_TO_LOAD_DISTANCE_MICRONS, widget.getText());
-                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
-                        widget.setText(core_.getProperty(plugin_.DEVICE_NAME, plugin_.LIFT_TO_LOAD_DISTANCE_MICRONS));
+                        core_.setProperty(pf, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        core_.setProperty(pf, PureFocus.LIFT_TO_LOAD_DISTANCE_MICRONS, widget.getText());
+                        core_.setProperty(pf, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 0);
+                        widget.setText(core_.getProperty(PureFocus.DEVICE_NAME, PureFocus.LIFT_TO_LOAD_DISTANCE_MICRONS));
                         triggerUpdates(false, false, false, true);
                     }
                     else if (widget == stepSize_)
                     {
-                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
-                        core_.setProperty(pf, plugin_.FOCUS_POSITION_STEP_MICRONS, widget.getText());
-                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
-                        widget.setText(core_.getProperty(plugin_.DEVICE_NAME, plugin_.FOCUS_POSITION_STEP_MICRONS));
+                        core_.setProperty(pf, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        core_.setProperty(pf, PureFocus.FOCUS_POSITION_STEP_MICRONS, widget.getText());
+                        core_.setProperty(pf, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 0);
+                        widget.setText(core_.getProperty(PureFocus.DEVICE_NAME, PureFocus.FOCUS_POSITION_STEP_MICRONS));
                         triggerUpdates(false, false, false, true);
                     }
                     else if (widget == offsetStepSize_)
                     {
-                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
-                        core_.setProperty(pf, plugin_.OFFSET_POSITION_STEP_MICRONS, widget.getText());
-                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
-                        widget.setText(core_.getProperty(plugin_.DEVICE_NAME, plugin_.OFFSET_POSITION_STEP_MICRONS));
+                        core_.setProperty(pf, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        core_.setProperty(pf, PureFocus.OFFSET_POSITION_STEP_MICRONS, widget.getText());
+                        core_.setProperty(pf, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 0);
+                        widget.setText(core_.getProperty(PureFocus.DEVICE_NAME, PureFocus.OFFSET_POSITION_STEP_MICRONS));
                         triggerUpdates(false, false, false, true);
                     }
                     else
@@ -1325,7 +1323,7 @@ public class PureFocusFrame extends JFrame implements ActionListener, ChangeList
                     try
                     {
                         // Ensure we do not leave this set, because it will lock the GUI
-                        core_.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                        core_.setProperty(pf, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 0);
                     }
                     catch (Exception e2)
                     {

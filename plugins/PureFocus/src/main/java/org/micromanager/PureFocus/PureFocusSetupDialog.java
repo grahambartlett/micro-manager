@@ -71,9 +71,6 @@ public class PureFocusSetupDialog extends JDialog implements ActionListener
     /** Reference to the MM/ImageJ GUI */
 	private final Studio gui_;
     
-    /** Reference to the plugin which owns this */
-	private final PureFocus plugin_;
-    
     /** Reference to the frame which owns this */
 	private final PureFocusFrame parent_;
     
@@ -104,16 +101,14 @@ public class PureFocusSetupDialog extends JDialog implements ActionListener
 	/** Create dialog.  This is always instantiated when the main window is
      * created, and is shown or hidden as required.
 	 * @param parent Base window
-     * @param plugin PureFocus plugin
 	 * @param gui MM script interface
    	 */
-	public PureFocusSetupDialog(PureFocusFrame parent, PureFocus plugin, Studio gui)
+	public PureFocusSetupDialog(PureFocusFrame parent, Studio gui)
 	{
         // We want this to be a modeless dialog, to work with the rest of the GUI
         super(parent, "Prior PureFocus PF-850 Setup");
             
 		parent_ = parent;
-        plugin_ = plugin;
         gui_ = gui;
         
 		initComponents();
@@ -375,7 +370,7 @@ public class PureFocusSetupDialog extends JDialog implements ActionListener
                 int maxLevelLocation = 0;
                 for (int i = 0; i < 6; i++)
                 {
-                    String values = core.getProperty(pf, plugin_.LINE_DATA + Integer.toString(i + 1));
+                    String values = core.getProperty(pf, PureFocus.LINE_DATA + Integer.toString(i + 1));
 
                     for (int j = 0; j < 250; j++ )
                     {
@@ -464,7 +459,7 @@ public class PureFocusSetupDialog extends JDialog implements ActionListener
                     int maxLevelLocation = 0;
                     for (int i = 0; i < 6; i++)
                     {
-                        String values = core.getProperty(pf, plugin_.LINE_DATA + Integer.toString(i + 1));
+                        String values = core.getProperty(pf, PureFocus.LINE_DATA + Integer.toString(i + 1));
 
                         for (int j = 0; j < 250; j++ )
                         {
@@ -536,7 +531,7 @@ public class PureFocusSetupDialog extends JDialog implements ActionListener
                     if (check == 0)
                     {
                         /* Apply pinhole centre to all objectives */
-                        core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        core.setProperty(PureFocus.DEVICE_NAME, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 1);
                         String currentObjective = core.getProperty(pf, PureFocus.OBJECTIVE);
                         
                         for (int i = 1; i <= 6; i++)
@@ -546,17 +541,17 @@ public class PureFocusSetupDialog extends JDialog implements ActionListener
                         }
                         
                         core.setProperty(pf, PureFocus.OBJECTIVE, currentObjective);            
-                        core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                        core.setProperty(PureFocus.DEVICE_NAME, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 0);
                         
                         parent_.triggerUpdates(false, true, true, false);
                     }
                     else
                     {
                         /* Apply pinhole centre only to current objective */
-                        core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        core.setProperty(PureFocus.DEVICE_NAME, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 1);
                         String currentObjective = core.getProperty(pf, PureFocus.OBJECTIVE);   
                         core.setProperty(pf, PureFocus.OBJECTIVE_PREFIX + currentObjective + "-" + PureFocus.PINHOLE_CENTRE, centreValue);
-                        core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                        core.setProperty(PureFocus.DEVICE_NAME, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 0);
                         
                         parent_.triggerUpdates(false, true, false, false);
                     }
@@ -580,7 +575,7 @@ public class PureFocusSetupDialog extends JDialog implements ActionListener
                     if (check == 0)
                     {
                         /* Apply pinhole centre to all objectives */
-                        core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        core.setProperty(PureFocus.DEVICE_NAME, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 1);
                         String currentObjective = core.getProperty(pf, PureFocus.OBJECTIVE);
                         
                         for (int i = 1; i <= 6; i++)
@@ -590,17 +585,17 @@ public class PureFocusSetupDialog extends JDialog implements ActionListener
                         }
                         
                         core.setProperty(pf, PureFocus.OBJECTIVE, currentObjective);    
-                        core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                        core.setProperty(PureFocus.DEVICE_NAME, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 0);
                         
                         parent_.triggerUpdates(false, true, true, false);
                     }
                     else
                     {
                         /* Apply pinhole centre only to current objective */
-                        core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        core.setProperty(PureFocus.DEVICE_NAME, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 1);
                         String currentObjective = core.getProperty(pf, PureFocus.OBJECTIVE);   
                         core.setProperty(pf, PureFocus.OBJECTIVE_PREFIX + currentObjective + "-" + PureFocus.PINHOLE_CENTRE, centreValue);
-                        core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                        core.setProperty(PureFocus.DEVICE_NAME, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 0);
                         
                         parent_.triggerUpdates(false, true, false, false);
                     }
@@ -625,7 +620,7 @@ public class PureFocusSetupDialog extends JDialog implements ActionListener
                     if (check == 0)
                     {
                         /* Apply background to all objectives */
-                        core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        core.setProperty(PureFocus.DEVICE_NAME, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 1);
                         String currentObjective = core.getProperty(pf, PureFocus.OBJECTIVE);
                         
                         for (int i = 1; i <= 6; i++)
@@ -639,21 +634,21 @@ public class PureFocusSetupDialog extends JDialog implements ActionListener
                         }
                         
                         core.setProperty(pf, PureFocus.OBJECTIVE, currentObjective);    
-                        core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                        core.setProperty(PureFocus.DEVICE_NAME, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 0);
                         
                         parent_.triggerUpdates(false, true, true, false);
                     }
                     else
                     {
                         /* Apply background only to current objective */
-                        core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        core.setProperty(PureFocus.DEVICE_NAME, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 1);
                         String currentObjective = core.getProperty(pf, PureFocus.OBJECTIVE);
                         String prefix = PureFocus.OBJECTIVE_PREFIX + currentObjective + "-";
                         core.setProperty(pf, prefix + PureFocus.BACKGROUND_A, backgroundValue);
                         core.setProperty(pf, prefix + PureFocus.BACKGROUND_B, backgroundValue);
                         core.setProperty(pf, prefix + PureFocus.BACKGROUND_C, backgroundValue);
                         core.setProperty(pf, prefix + PureFocus.BACKGROUND_D, backgroundValue);
-                        core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                        core.setProperty(PureFocus.DEVICE_NAME, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 0);
                         
                         parent_.triggerUpdates(false, true, false, false);
                     }
@@ -674,7 +669,7 @@ public class PureFocusSetupDialog extends JDialog implements ActionListener
                     if (check == 0)
                     {
                         /* Apply background to all objectives */
-                        core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        core.setProperty(PureFocus.DEVICE_NAME, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 1);
                         String currentObjective = core.getProperty(pf, PureFocus.OBJECTIVE);
                         
                         for (int i = 1; i <= 6; i++)
@@ -688,21 +683,21 @@ public class PureFocusSetupDialog extends JDialog implements ActionListener
                         }
                         
                         core.setProperty(pf, PureFocus.OBJECTIVE, currentObjective);            
-                        core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                        core.setProperty(PureFocus.DEVICE_NAME, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 0);
                         
                         parent_.triggerUpdates(false, true, true, false);
                     }
                     else
                     {
                         /* Apply background only to current objective */
-                        core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        core.setProperty(PureFocus.DEVICE_NAME, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 1);
                         String currentObjective = core.getProperty(pf, PureFocus.OBJECTIVE); 
                         String prefix = PureFocus.OBJECTIVE_PREFIX + currentObjective + "-";
                         core.setProperty(pf, prefix + PureFocus.BACKGROUND_A, "0");
                         core.setProperty(pf, prefix + PureFocus.BACKGROUND_B, "0");
                         core.setProperty(pf, prefix + PureFocus.BACKGROUND_C, "0");
                         core.setProperty(pf, prefix + PureFocus.BACKGROUND_D, "0");
-                        core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                        core.setProperty(PureFocus.DEVICE_NAME, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 0);
                         
                         parent_.triggerUpdates(false, true, false, false);
                     }
@@ -725,7 +720,7 @@ public class PureFocusSetupDialog extends JDialog implements ActionListener
                     if (check == 0)
                     {
                         /* Apply background to all objectives */
-                        core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        core.setProperty(PureFocus.DEVICE_NAME, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 1);
                         String currentObjective = core.getProperty(pf, PureFocus.OBJECTIVE);
                         
                         for (int i = 1; i <= 6; i++)
@@ -739,21 +734,21 @@ public class PureFocusSetupDialog extends JDialog implements ActionListener
                         }
                         
                         core.setProperty(pf, PureFocus.OBJECTIVE, currentObjective);            
-                        core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                        core.setProperty(PureFocus.DEVICE_NAME, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 0);
                         
                         parent_.triggerUpdates(false, true, true, false);
                     }
                     else
                     {
                         /* Apply background only to current objective */
-                        core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 1);
+                        core.setProperty(PureFocus.DEVICE_NAME, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 1);
                         String currentObjective = core.getProperty(pf, PureFocus.OBJECTIVE);
                         String prefix = PureFocus.OBJECTIVE_PREFIX + currentObjective + "-";
                         core.setProperty(pf, prefix + PureFocus.BACKGROUND_A, backgroundValue);
                         core.setProperty(pf, prefix + PureFocus.BACKGROUND_B, backgroundValue);
                         core.setProperty(pf, prefix + PureFocus.BACKGROUND_C, backgroundValue);
                         core.setProperty(pf, prefix + PureFocus.BACKGROUND_D, backgroundValue);
-                        core.setProperty(plugin_.DEVICE_NAME, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                        core.setProperty(PureFocus.DEVICE_NAME, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 0);
                         
                         parent_.triggerUpdates(false, true, false, false);
                     }
@@ -773,7 +768,7 @@ public class PureFocusSetupDialog extends JDialog implements ActionListener
             try
             {
                 // Ensure we do not leave this set, because it will lock the GUI
-                core.setProperty(pf, plugin_.SINGLE_CHANGE_IN_PROGRESS, 0);
+                core.setProperty(pf, PureFocus.SINGLE_CHANGE_IN_PROGRESS, 0);
             }
             catch (Exception e2)
             {
