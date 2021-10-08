@@ -65,7 +65,7 @@ public class PureFocusObjectiveSlotTableDialog extends JDialog implements Action
 	private final PureFocusFrame parent_;
 	
 	// GUI elements
-    private JComboBox[] objectivePreset_;
+    private JComboBox<String>[] objectivePreset_;
     private JTextField[][] lensOffset_;
     private JTextField[] kP_;
     private JTextField[] kI_;
@@ -167,7 +167,7 @@ public class PureFocusObjectiveSlotTableDialog extends JDialog implements Action
                 prefix = PureFocus.OBJECTIVE_PREFIX + Integer.toString(i) + "-"; 
             }
             
-            objectivePreset_[i] = new javax.swing.JComboBox(parent_.objectivePresetNames);         
+            objectivePreset_[i] = new javax.swing.JComboBox<String>(parent_.objectivePresetNames);         
             objectivePreset_[i].setPreferredSize(new java.awt.Dimension(100, 20));
             objectivePreset_[i].addActionListener(this);
             objectivePreset_[i].setActionCommand(prefix + PureFocus.PRESET);
@@ -799,7 +799,7 @@ public class PureFocusObjectiveSlotTableDialog extends JDialog implements Action
                 }
                 else if (source.getClass() == JComboBox.class)
                 {
-                    JComboBox widget = (JComboBox)source;
+                    JComboBox<String> widget = (JComboBox<String>)source;
                     String val = (String)widget.getSelectedItem();               
                     core.setProperty(pf, propertyName, val);
                 }
@@ -854,7 +854,7 @@ public class PureFocusObjectiveSlotTableDialog extends JDialog implements Action
                     }
                     else if (source.getClass() == JComboBox.class)
                     {
-                        JComboBox widget = (JComboBox)source;
+                        JComboBox<String> widget = (JComboBox<String>)source;
                         widget.setSelectedItem(core.getProperty(pf, propertyName));
                     }                    
                     else if (source.getClass() == JCheckBox.class)

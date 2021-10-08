@@ -376,7 +376,7 @@ public class PureFocusSetupDialog extends JDialog implements ActionListener
                     {
                         if (values.length() < ((j + 1) * 3))
                         {
-                            graphData_.updateByIndex((i * 250) + j, (double)0.0);
+                            graphData_.updateByIndex((i * 250) + j, 0.0);
                         }
                         else
                         {
@@ -465,7 +465,7 @@ public class PureFocusSetupDialog extends JDialog implements ActionListener
                         {
                             if (values.length() < ((j + 1) * 3))
                             {
-                                graphData_.updateByIndex((i * 250) + j, (double)0.0);
+                                graphData_.updateByIndex((i * 250) + j, 0.0);
                             }
                             else
                             {
