@@ -141,57 +141,57 @@ public class LimitedChartPanel extends ChartPanel
     
     
     @Override
-    public void	zoom​(Rectangle2D selection)
+    public void	zoom(Rectangle2D selection)
     {
-        super.zoom​(selection);
+        super.zoom(selection);
         forceLimitedZoom();
     }
     
     
     @Override
-    public void zoomInBoth​(double x, double y)
+    public void zoomInBoth(double x, double y)
     {
-        super.zoomInBoth​(x, y);
+        super.zoomInBoth(x, y);
         forceLimitedZoom();
     }
     
 
     @Override
-    public void zoomInDomain​(double x, double y)
+    public void zoomInDomain(double x, double y)
     {
-        super.zoomInDomain​(x, y);
+        super.zoomInDomain(x, y);
         forceLimitedZoom();
     }
     
     
     @Override
-    public void zoomInRange​(double x, double y)
+    public void zoomInRange(double x, double y)
     {
-        super.zoomInRange​(x ,y);
+        super.zoomInRange(x ,y);
         forceLimitedZoom();
     }
     
     
     @Override
-    public void zoomOutBoth​(double x, double y)	
+    public void zoomOutBoth(double x, double y)	
     {
-        super.zoomOutBoth​(x, y);
+        super.zoomOutBoth(x, y);
         forceLimitedZoom();
     }
     
     
     @Override
-    public void zoomOutDomain​(double x, double y)
+    public void zoomOutDomain(double x, double y)
     {
-        super.zoomOutDomain​(x, y);
+        super.zoomOutDomain(x, y);
         forceLimitedZoom();
     }
     
     
     @Override
-    public void zoomOutRange​(double x, double y)
+    public void zoomOutRange(double x, double y)
     {
-        super.zoomOutRange​(x, y);
+        super.zoomOutRange(x, y);
         forceLimitedZoom();
     }
     
