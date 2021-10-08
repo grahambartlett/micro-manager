@@ -11,6 +11,8 @@ Licensed under the BSD license.
 
 package org.micromanager.PureFocus;
 
+import java.util.ArrayList;
+
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Shape;
@@ -65,7 +67,7 @@ public class PureFocusObjectiveSlotTableDialog extends JDialog implements Action
 	private final PureFocusFrame parent_;
 	
 	// GUI elements
-    private JComboBox<String>[] objectivePreset_;
+    private ArrayList<JComboBox<String>> objectivePreset_;
     private JTextField[][] lensOffset_;
     private JTextField[] kP_;
     private JTextField[] kI_;
@@ -128,7 +130,10 @@ public class PureFocusObjectiveSlotTableDialog extends JDialog implements Action
         this.setLayout(new MigLayout("", "", ""));
         
         // Create arrays for widgets
-        objectivePreset_ = new javax.swing.JComboBox[7];
+        /* JComboBox is a generic, and regular arrays don't play nicely with generics.
+        We need to use a List instead, otherwise we get warnings at compile time.
+        */
+        objectivePreset_ = new ArrayList<javax.swing.JComboBox<String>>(7);
         lensOffset_ = new javax.swing.JTextField[7][5];
         kP_ = new javax.swing.JTextField[7];
         kI_ = new javax.swing.JTextField[7];
@@ -167,11 +172,11 @@ public class PureFocusObjectiveSlotTableDialog extends JDialog implements Action
                 prefix = PureFocus.OBJECTIVE_PREFIX + Integer.toString(i) + "-"; 
             }
             
-            objectivePreset_[i] = new javax.swing.JComboBox<String>(parent_.objectivePresetNames);         
-            objectivePreset_[i].setPreferredSize(new java.awt.Dimension(100, 20));
-            objectivePreset_[i].addActionListener(this);
-            objectivePreset_[i].setActionCommand(prefix + PureFocus.PRESET);
-            objectivePreset_[i].setEnabled(true);
+            JComboBox<String> preset = new javax.swing.JComboBox<>(parent_.objectivePresetNames);
+            preset.addActionListener(this);
+            preset.setActionCommand(prefix + PureFocus.PRESET);
+            preset.setEnabled(true);
+            objectivePreset_.add(preset);
 
             int j;
             for (j = 0; j < 5; j++)
@@ -336,9 +341,9 @@ public class PureFocusObjectiveSlotTableDialog extends JDialog implements Action
         this.add(new JLabel(""), "align");
         for (i = 1; i < 6; i++)
         {
-            this.add(objectivePreset_[i], "align");
+            this.add(objectivePreset_.get(i), "align");
         }
-        this.add(objectivePreset_[6], "wrap");
+        this.add(objectivePreset_.get(6), "wrap");
         
         this.add(new JLabel("Default lens offset"), "align label");
         this.add(new JLabel(""), "align");
@@ -573,7 +578,7 @@ public class PureFocusObjectiveSlotTableDialog extends JDialog implements Action
             {
                 boolean slotActive = (i == activateSlot);
 
-                objectivePreset_[i].setEnabled(slotActive);
+                objectivePreset_.get(i).setEnabled(slotActive);
 
                 for (int j = 0; j < 5; j++)
                 {
@@ -655,7 +660,7 @@ public class PureFocusObjectiveSlotTableDialog extends JDialog implements Action
  
                 value = core.getProperty(pf, prefix + PureFocus.PRESET);
                 core.defineConfig(PureFocus.CONFIG_GROUP, PureFocus.CONFIG_GROUP_PRESET, PureFocus.DEVICE_NAME, prefix + PureFocus.PRESET, value);
-                objectivePreset_[slot].setSelectedItem(value);
+                objectivePreset_.get(slot).setSelectedItem(value);
                 
                 int i;
                 for (i = 0; i < 5; i ++)
@@ -799,6 +804,10 @@ public class PureFocusObjectiveSlotTableDialog extends JDialog implements Action
                 }
                 else if (source.getClass() == JComboBox.class)
                 {
+                    /* We haven't checked that this JComboBox is a String type, but
+                    we don't use any other type so this is safe.
+                    */
+                    @SuppressWarnings("unchecked")                    
                     JComboBox<String> widget = (JComboBox<String>)source;
                     String val = (String)widget.getSelectedItem();               
                     core.setProperty(pf, propertyName, val);
@@ -854,6 +863,10 @@ public class PureFocusObjectiveSlotTableDialog extends JDialog implements Action
                     }
                     else if (source.getClass() == JComboBox.class)
                     {
+                        /* We haven't checked that this JComboBox is a String type, but
+                        we don't use any other type so this is safe.
+                        */
+                        @SuppressWarnings("unchecked")
                         JComboBox<String> widget = (JComboBox<String>)source;
                         widget.setSelectedItem(core.getProperty(pf, propertyName));
                     }                    
